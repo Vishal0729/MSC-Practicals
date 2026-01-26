@@ -1,0 +1,13 @@
+Shares,Units,sTable
+AAPL,10,Apple_Data
+MSFT,15,Microsoft_Data
+GOOGL,8,Google_Data
+AMZN,5,Amazon_Data
+TSLA,12,Tesla_Data
+INFY.NS,20,Infosys_Data
+RELIANCE.NS,10,Reliance_Data
+INVALID123,5,Invalid_Share
+FAKE.NS,7,Fake_Share
+BTC-USD,2,Bitcoin_Data
+EUR/USD,5,Euro_Dollar
+ABC/XYZ,4,Random_Slash

@@ -1,0 +1,8 @@
+Shipping_Term,Seller,Carrier,Port_From,Ship,Port_To,Terminal,Named_Place,Buyer
+EXW,Seller,Buyer,Buyer,Buyer,Buyer,Buyer,Buyer,Buyer
+FCA,Seller,Seller,Buyer,Buyer,Buyer,Buyer,Buyer,Buyer
+CPT,Seller,Seller,Buyer,Buyer,Buyer,Buyer,Buyer,Buyer
+CIP,Seller,Seller,Insurance,Insurance,Insurance,Insurance,Insurance,Buyer
+DAT,Seller,Seller,Seller,Seller,Seller,Seller,Buyer,Buyer
+DAP,Seller,Seller,Seller,Seller,Seller,Seller,Seller,Buyer
+DDP,Seller,Seller,Seller,Seller,Seller,Seller,Seller,Seller
