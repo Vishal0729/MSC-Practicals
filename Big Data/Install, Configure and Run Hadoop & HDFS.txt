@@ -1,0 +1,218 @@
+# Install, Configure and Run Hadoop & HDFS (Without Admin Access)
+
+## Part 1: Create Hadoop User & Set Up SSH (5 Marks)
+
+```bash
+# ===== Step 1: Create a Hadoop user (if on Linux/WSL) =====
+# Without admin, use your existing user account
+# Set a dedicated working directory
+mkdir -p ~/hadoop_home
+cd ~/hadoop_home
+
+# ===== Step 2: Install SSH (Windows - use Git Bash or WSL) =====
+# Check if SSH is available
+ssh -V
+
+# ===== Step 3: Generate SSH Key (passwordless login for Hadoop) =====
+ssh-keygen -t rsa -P "" -f ~/.ssh/id_rsa
+
+# ===== Step 4: Authorize the key =====
+cat ~/.ssh/id_rsa.pub >> ~/.ssh/authorized_keys
+chmod 600 ~/.ssh/authorized_keys
+
+# ===== Step 5: Test SSH localhost (should connect without password) =====
+ssh localhost
+# Type 'exit' to come back
+
+# If successful, you'll see:
+# Welcome to Ubuntu... (or similar)
+# This confirms passwordless SSH is working
+```
+
+**On Windows without WSL:**
+```cmd
+:: Step 1: Use existing user
+:: Step 2: Open PowerShell
+ssh-keygen -t rsa -P "" -f %USERPROFILE%\.ssh\id_rsa
+
+:: Step 3: Authorize
+type %USERPROFILE%\.ssh\id_rsa.pub >> %USERPROFILE%\.ssh\authorized_keys
+
+:: Step 4: Test
+ssh localhost
+```
+
+---
+
+## Part 2: Download, Extract, Set Variables & Configure (5 Marks)
+
+```bash
+# ===== Step 1: Download Hadoop =====
+cd ~/hadoop_home
+wget https://dlcdn.apache.org/hadoop/common/hadoop-3.3.6/hadoop-3.3.6.tar.gz
+
+# ===== Step 2: Extract =====
+tar -xzf hadoop-3.3.6.tar.gz
+mv hadoop-3.3.6 hadoop
+
+# ===== Step 3: Set Environment Variables (add to ~/.bashrc) =====
+echo '
+export JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64
+export HADOOP_HOME=~/hadoop_home/hadoop
+export HADOOP_CONF_DIR=$HADOOP_HOME/etc/hadoop
+export PATH=$PATH:$HADOOP_HOME/bin:$HADOOP_HOME/sbin
+' >> ~/.bashrc
+
+source ~/.bashrc
+
+# Verify
+hadoop version
+```
+
+**Windows (CMD batch script — `setup_hadoop.bat`):**
+```cmd
+@echo off
+set JAVA_HOME=C:\Users\%USERNAME%\tools\jdk1.8.0_xxx
+set HADOOP_HOME=C:\Users\%USERNAME%\hadoop_home\hadoop
+set PATH=%HADOOP_HOME%\bin;%HADOOP_HOME%\sbin;%JAVA_HOME%\bin;%PATH%
+echo Hadoop environment set!
+hadoop version
+cmd /k
+```
+
+### Step 4: Configure Hadoop (4 files in `$HADOOP_HOME/etc/hadoop/`)
+
+**core-site.xml:**
+```xml
+<configuration>
+    <property>
+        <name>fs.defaultFS</name>
+        <value>hdfs://localhost:9000</value>
+    </property>
+    <property>
+        <name>hadoop.tmp.dir</name>
+        <value>${user.home}/hadoop_home/tmp</value>
+    </property>
+</configuration>
+```
+
+**hdfs-site.xml:**
+```xml
+<configuration>
+    <property>
+        <name>dfs.replication</name>
+        <value>1</value>
+    </property>
+    <property>
+        <name>dfs.namenode.name.dir</name>
+        <value>file:///${user.home}/hadoop_home/data/namenode</value>
+    </property>
+    <property>
+        <name>dfs.datanode.data.dir</name>
+        <value>file:///${user.home}/hadoop_home/data/datanode</value>
+    </property>
+</configuration>
+```
+
+**mapred-site.xml:**
+```xml
+<configuration>
+    <property>
+        <name>mapreduce.framework.name</name>
+        <value>yarn</value>
+    </property>
+</configuration>
+```
+
+**yarn-site.xml:**
+```xml
+<configuration>
+    <property>
+        <name>yarn.nodemanager.aux-services</name>
+        <value>mapreduce_shuffle</value>
+    </property>
+</configuration>
+```
+
+### Step 5: Create required directories
+
+```bash
+mkdir -p ~/hadoop_home/tmp
+mkdir -p ~/hadoop_home/data/namenode
+mkdir -p ~/hadoop_home/data/datanode
+```
+
+---
+
+## Part 3: Run Hadoop & Explore HDFS (5 Marks)
+
+```bash
+# ===== Step 1: Format NameNode (first time only) =====
+hdfs namenode -format
+
+# ===== Step 2: Start HDFS =====
+start-dfs.sh
+
+# ===== Step 3: Verify services are running =====
+jps
+# Expected output:
+#   NameNode
+#   DataNode
+#   SecondaryNameNode
+
+# Web UI: http://localhost:9870
+```
+
+### Explore HDFS (5 Basic Operations)
+
+```bash
+# ===== 1. Create a directory in HDFS =====
+hdfs dfs -mkdir -p /user/mydata
+# Output: (no output = success)
+
+# ===== 2. Upload a file to HDFS =====
+echo "Hello Hadoop HDFS" > sample.txt
+hdfs dfs -put sample.txt /user/mydata/
+# Output: (no output = success)
+
+# ===== 3. List files in HDFS =====
+hdfs dfs -ls /user/mydata/
+# Output:
+# -rw-r--r--   1 user supergroup  18 2024-06-15 10:00 /user/mydata/sample.txt
+
+# ===== 4. Read/Display file content =====
+hdfs dfs -cat /user/mydata/sample.txt
+# Output:
+# Hello Hadoop HDFS
+
+# ===== 5. Download file from HDFS =====
+hdfs dfs -get /user/mydata/sample.txt downloaded.txt
+cat downloaded.txt
+# Output:
+# Hello Hadoop HDFS
+```
+
+### Stop Hadoop
+
+```bash
+stop-dfs.sh
+```
+
+---
+
+## Quick Summary
+
+| Part | Task | Key Command |
+|------|------|-------------|
+| **SSH Setup** | Generate key | `ssh-keygen -t rsa -P ""` |
+| **SSH Setup** | Authorize | `cat id_rsa.pub >> authorized_keys` |
+| **SSH Setup** | Test | `ssh localhost` |
+| **Configure** | Set env vars | `export HADOOP_HOME=~/hadoop_home/hadoop` |
+| **Configure** | Core files | `core-site.xml`, `hdfs-site.xml` |
+| **Run** | Format | `hdfs namenode -format` |
+| **Run** | Start | `start-dfs.sh` |
+| **HDFS** | mkdir | `hdfs dfs -mkdir /user/mydata` |
+| **HDFS** | Upload | `hdfs dfs -put file.txt /path/` |
+| **HDFS** | List | `hdfs dfs -ls /path/` |
+| **HDFS** | Read | `hdfs dfs -cat /path/file.txt` |
+| **HDFS** | Download | `hdfs dfs -get /path/file.txt local.txt` |

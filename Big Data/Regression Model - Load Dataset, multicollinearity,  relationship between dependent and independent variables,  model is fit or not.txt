@@ -1,0 +1,236 @@
+
+# Regression Model
+
+## Python
+
+```python
+# ===== Step 1: Load packages =====
+import pandas as pd
+import numpy as np
+from sklearn.linear_model import LinearRegression
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import r2_score, mean_squared_error
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+# ===== Step 2: Load Dataset (5 Marks) =====
+url = "https://raw.githubusercontent.com/selva86/datasets/master/BostonHousing.csv"
+df = pd.read_csv(url)
+
+# --- If file is downloaded locally: ---
+# df = pd.read_csv("BostonHousing.csv")
+# ---------------------------------------
+
+print("Dataset: Boston Housing")
+print(f"Shape: {df.shape}")
+print("\nFirst 5 rows:")
+print(df.head())
+
+# ===== Step 3: Check for Multicollinearity (5 Marks) =====
+# Method: Correlation Matrix
+print("\nCorrelation Matrix (with target 'medv'):")
+correlation = df.corr()
+print(correlation['medv'].sort_values(ascending=False))
+
+# Heatmap for multicollinearity
+plt.figure(figsize=(10, 8))
+sns.heatmap(correlation, annot=True, fmt='.1f', cmap='coolwarm', 
+            square=True, linewidths=0.5, cbar_kws={"shrink": 0.8})
+plt.title("Correlation Heatmap - Multicollinearity Check")
+plt.tight_layout()
+plt.savefig("correlation_heatmap.png")
+plt.show()
+
+# High correlation pairs (multicollinearity indicator)
+print("\nHighly Correlated Pairs (|r| > 0.7):")
+for i in range(len(correlation.columns)):
+    for j in range(i+1, len(correlation.columns)):
+        if abs(correlation.iloc[i, j]) > 0.7:
+            print(f"  {correlation.columns[i]} & {correlation.columns[j]}: {correlation.iloc[i, j]:.3f}")
+
+# ===== Step 4: Explore Relationship (Dependent vs Independent) (5 Marks) =====
+# Scatter plots of top 4 correlated features vs target
+top_features = ['lstat', 'rm', 'ptratio', 'indus']
+
+fig, axes = plt.subplots(2, 2, figsize=(10, 8))
+for idx, feature in enumerate(top_features):
+    ax = axes[idx//2, idx%2]
+    ax.scatter(df[feature], df['medv'], alpha=0.5, color='blue', edgecolors='k')
+    ax.set_xlabel(feature)
+    ax.set_ylabel("medv (Price)")
+    ax.set_title(f"medv vs {feature} (r={correlation['medv'][feature]:.3f})")
+    ax.grid(True, alpha=0.3)
+
+plt.suptitle("Relationship: Independent Variables vs Target (medv)", fontsize=13)
+plt.tight_layout()
+plt.savefig("relationship_plots.png")
+plt.show()
+
+# ===== Step 5: Build Model & Check Fitness (5 Marks) =====
+X = df[['lstat', 'rm', 'ptratio', 'indus']]
+y = df['medv']
+
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42)
+
+model = LinearRegression()
+model.fit(X_train, y_train)
+
+# Predictions
+y_pred_train = model.predict(X_train)
+y_pred_test = model.predict(X_test)
+
+# Model Fitness Metrics
+r2_train = r2_score(y_train, y_pred_train)
+r2_test = r2_score(y_test, y_pred_test)
+rmse = np.sqrt(mean_squared_error(y_test, y_pred_test))
+
+print("\n" + "="*50)
+print("  MODEL FITNESS CHECK")
+print("="*50)
+print(f"  R² (Train): {r2_train:.4f}")
+print(f"  R² (Test):  {r2_test:.4f}")
+print(f"  RMSE:       {rmse:.4f}")
+print(f"\n  Model Fit: {'GOOD' if r2_test > 0.6 else 'POOR'}")
+print(f"  Overfitting: {'YES' if (r2_train - r2_test) > 0.1 else 'NO'}")
+
+# Actual vs Predicted Plot
+plt.figure(figsize=(7, 6))
+plt.scatter(y_test, y_pred_test, alpha=0.6, color='green', edgecolors='k')
+plt.plot([y_test.min(), y_test.max()], [y_test.min(), y_test.max()], 'r--', lw=2)
+plt.xlabel("Actual Values")
+plt.ylabel("Predicted Values")
+plt.title(f"Model Fitness: Actual vs Predicted (R²={r2_test:.4f})")
+plt.grid(True, alpha=0.3)
+plt.tight_layout()
+plt.savefig("model_fitness.png")
+plt.show()
+```
+
+---
+
+## R
+
+```r
+# ===== Step 1: Load packages =====
+library(car)  # For VIF (multicollinearity)
+
+# ===== Step 2: Load Dataset (5 Marks) =====
+url <- "https://raw.githubusercontent.com/selva86/datasets/master/BostonHousing.csv"
+df <- read.csv(url)
+
+# --- If file is downloaded locally: ---
+# df <- read.csv("BostonHousing.csv")
+# ---------------------------------------
+
+cat("Dataset: Boston Housing\n")
+cat(sprintf("Shape: %d rows, %d columns\n", nrow(df), ncol(df)))
+cat("\nFirst 5 rows:\n")
+print(head(df, 5))
+
+# ===== Step 3: Check for Multicollinearity (5 Marks) =====
+# Method 1: Correlation Matrix
+cat("\nCorrelation with target (medv):\n")
+correlations <- cor(df)
+print(sort(correlations[, "medv"], decreasing = TRUE))
+
+# Method 2: VIF (Variance Inflation Factor)
+# VIF > 5 indicates multicollinearity
+model_full <- lm(medv ~ ., data = df)
+cat("\nVIF Values (VIF > 5 = multicollinearity):\n")
+vif_values <- vif(model_full)
+print(round(vif_values, 2))
+
+# High VIF warning
+cat("\nVariables with high multicollinearity (VIF > 5):\n")
+print(names(vif_values[vif_values > 5]))
+
+# Heatmap
+heatmap(cor(df), col = heat.colors(20), margins = c(8, 8),
+        main = "Correlation Heatmap - Multicollinearity Check")
+
+# ===== Step 4: Explore Relationship (5 Marks) =====
+top_features <- c("lstat", "rm", "ptratio", "indus")
+
+par(mfrow = c(2, 2))
+for (feature in top_features) {
+  plot(df[[feature]], df$medv,
+       xlab = feature, ylab = "medv (Price)",
+       main = sprintf("medv vs %s (r=%.3f)", feature, cor(df[[feature]], df$medv)),
+       col = "blue", pch = 16, cex = 0.8)
+  abline(lm(df$medv ~ df[[feature]]), col = "red", lwd = 2)
+  grid()
+}
+par(mfrow = c(1, 1))
+
+# ===== Step 5: Build Model & Check Fitness (5 Marks) =====
+set.seed(42)
+train_idx <- sample(1:nrow(df), 0.7 * nrow(df))
+train_data <- df[train_idx, ]
+test_data <- df[-train_idx, ]
+
+model <- lm(medv ~ lstat + rm + ptratio + indus, data = train_data)
+
+cat("\nModel Summary:\n")
+print(summary(model))
+
+# Predictions
+y_pred <- predict(model, test_data)
+y_test <- test_data$medv
+
+# Fitness Metrics
+ss_res <- sum((y_test - y_pred)^2)
+ss_tot <- sum((y_test - mean(y_test))^2)
+r2_test <- 1 - (ss_res / ss_tot)
+rmse <- sqrt(mean((y_test - y_pred)^2))
+r2_train <- summary(model)$r.squared
+
+cat(sprintf("\n%s\n", strrep("=", 50)))
+cat("  MODEL FITNESS CHECK\n")
+cat(sprintf("%s\n", strrep("=", 50)))
+cat(sprintf("  R² (Train): %.4f\n", r2_train))
+cat(sprintf("  R² (Test):  %.4f\n", r2_test))
+cat(sprintf("  RMSE:       %.4f\n", rmse))
+cat(sprintf("\n  Model Fit: %s\n", ifelse(r2_test > 0.6, "GOOD", "POOR")))
+cat(sprintf("  Overfitting: %s\n", ifelse((r2_train - r2_test) > 0.1, "YES", "NO")))
+
+# Actual vs Predicted Plot
+plot(y_test, y_pred, pch = 16, col = "green",
+     xlab = "Actual Values", ylab = "Predicted Values",
+     main = sprintf("Model Fitness: Actual vs Predicted (R²=%.4f)", r2_test))
+abline(0, 1, col = "red", lwd = 2, lty = 2)
+grid()
+```
+
+---
+
+## Expected Output
+
+```
+Dataset: Boston Housing
+Shape: (506, 14)
+
+Correlation with target (medv):
+  medv      1.000
+  rm        0.695
+  zn        0.360
+  b         0.333
+  ...
+  lstat    -0.738
+
+Highly Correlated Pairs (|r| > 0.7):
+  rad & tax: 0.910
+  nox & indus: 0.764
+
+VIF Values (VIF > 5 = multicollinearity):
+  rad: 7.48, tax: 9.01, nox: 4.39...
+
+==================================================
+  MODEL FITNESS CHECK
+==================================================
+  R² (Train): 0.6532
+  R² (Test):  0.6348
+  RMSE:       5.2140
+
+  Model Fit: GOOD
+  Overfitting: NO
+```

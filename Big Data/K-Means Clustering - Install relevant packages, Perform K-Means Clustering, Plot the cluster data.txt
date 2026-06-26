@@ -1,0 +1,193 @@
+
+# K-Means Clustering Model
+
+## Python
+
+```python
+# ===== Step 1: Install/Load relevant packages (5 Marks) =====
+import pandas as pd
+import numpy as np
+from sklearn.cluster import KMeans
+from sklearn.preprocessing import StandardScaler
+from sklearn.metrics import silhouette_score
+import matplotlib.pyplot as plt
+
+# ===== Step 2: Load Dataset =====
+from sklearn.datasets import load_iris
+iris = load_iris()
+X = pd.DataFrame(iris.data, columns=iris.feature_names)
+
+print("Dataset: Iris (Unsupervised - no labels used)")
+print(f"Shape: {X.shape}")
+
+# Scale features
+scaler = StandardScaler()
+X_scaled = scaler.fit_transform(X)
+
+# ===== Step 3: Perform K-Means Clustering (5 Marks) =====
+# Find optimal K using Elbow Method
+wcss = []
+for k in range(1, 8):
+    km = KMeans(n_clusters=k, random_state=42, n_init=10)
+    km.fit(X_scaled)
+    wcss.append(km.inertia_)
+
+print("\nElbow Method (WCSS):")
+for k, w in zip(range(1, 8), wcss):
+    print(f"  K={k}: {w:.2f}")
+
+# Apply K-Means with optimal K=3
+kmeans = KMeans(n_clusters=3, random_state=42, n_init=10)
+clusters = kmeans.fit_predict(X_scaled)
+
+print(f"\nK-Means applied (K=3)")
+print(f"Cluster Distribution: {np.bincount(clusters)}")
+print(f"Silhouette Score: {silhouette_score(X_scaled, clusters):.4f}")
+
+# ===== Step 4: Plot Cluster Data (5 Marks) =====
+fig, axes = plt.subplots(1, 3, figsize=(15, 5))
+colors = ['red', 'blue', 'green']
+
+# Plot 1: Elbow Method
+axes[0].plot(range(1, 8), wcss, 'bo-', linewidth=2)
+axes[0].axvline(x=3, color='red', linestyle='--')
+axes[0].set_xlabel("K")
+axes[0].set_ylabel("WCSS")
+axes[0].set_title("Elbow Method")
+axes[0].grid(True, alpha=0.3)
+
+# Plot 2: Clusters (Sepal Length vs Sepal Width)
+for i in range(3):
+    mask = clusters == i
+    axes[1].scatter(X_scaled[mask, 0], X_scaled[mask, 1],
+                    c=colors[i], label=f'Cluster {i}', alpha=0.7, edgecolors='k')
+axes[1].scatter(kmeans.cluster_centers_[:, 0], kmeans.cluster_centers_[:, 1],
+                c='yellow', marker='*', s=300, edgecolors='black', label='Centroids')
+axes[1].set_xlabel("Sepal Length (scaled)")
+axes[1].set_ylabel("Sepal Width (scaled)")
+axes[1].set_title("Clusters (Feature 1 vs 2)")
+axes[1].legend()
+axes[1].grid(True, alpha=0.3)
+
+# Plot 3: Clusters (Petal Length vs Petal Width)
+for i in range(3):
+    mask = clusters == i
+    axes[2].scatter(X_scaled[mask, 2], X_scaled[mask, 3],
+                    c=colors[i], label=f'Cluster {i}', alpha=0.7, edgecolors='k')
+axes[2].scatter(kmeans.cluster_centers_[:, 2], kmeans.cluster_centers_[:, 3],
+                c='yellow', marker='*', s=300, edgecolors='black', label='Centroids')
+axes[2].set_xlabel("Petal Length (scaled)")
+axes[2].set_ylabel("Petal Width (scaled)")
+axes[2].set_title("Clusters (Feature 3 vs 4)")
+axes[2].legend()
+axes[2].grid(True, alpha=0.3)
+
+plt.suptitle("K-Means Clustering - Iris Dataset", fontsize=14)
+plt.tight_layout()
+plt.savefig("kmeans_clustering.png")
+plt.show()
+```
+
+---
+
+## R
+
+```r
+# ===== Step 1: Install/Load relevant packages (5 Marks) =====
+library(ggplot2)      # Visualization
+library(cluster)      # Silhouette
+library(factoextra)   # Cluster visualization
+
+# ===== Step 2: Load Dataset =====
+data(iris)
+X <- iris[, 1:4]  # Only numeric features (no labels used)
+
+cat("Dataset: Iris (Unsupervised - no labels used)\n")
+cat(sprintf("Shape: %d rows, %d columns\n", nrow(X), ncol(X)))
+
+# Scale features
+X_scaled <- scale(X)
+
+# ===== Step 3: Perform K-Means Clustering (5 Marks) =====
+# Find optimal K using Elbow Method
+wcss <- numeric(7)
+for (k in 1:7) {
+  km <- kmeans(X_scaled, centers = k, nstart = 10)
+  wcss[k] <- km$tot.withinss
+}
+
+cat("\nElbow Method (WCSS):\n")
+for (k in 1:7) {
+  cat(sprintf("  K=%d: %.2f\n", k, wcss[k]))
+}
+
+# Apply K-Means with K=3
+set.seed(42)
+kmeans_model <- kmeans(X_scaled, centers = 3, nstart = 25)
+
+cat(sprintf("\nK-Means applied (K=3)\n"))
+cat(sprintf("Cluster Distribution: %s\n", paste(kmeans_model$size, collapse = ", ")))
+
+sil <- silhouette(kmeans_model$cluster, dist(X_scaled))
+cat(sprintf("Silhouette Score: %.4f\n", mean(sil[, 3])))
+
+# ===== Step 4: Plot Cluster Data (5 Marks) =====
+par(mfrow = c(2, 2))
+
+# Plot 1: Elbow Method
+plot(1:7, wcss, type = "b", pch = 16, col = "blue",
+     xlab = "K", ylab = "WCSS", main = "Elbow Method")
+abline(v = 3, col = "red", lty = 2)
+grid()
+
+# Plot 2: Clusters (Sepal Length vs Sepal Width)
+plot(X_scaled[, 1], X_scaled[, 2],
+     col = kmeans_model$cluster + 1, pch = 16, cex = 1.3,
+     xlab = "Sepal Length (scaled)", ylab = "Sepal Width (scaled)",
+     main = "Clusters (Feature 1 vs 2)")
+points(kmeans_model$centers[, 1], kmeans_model$centers[, 2],
+       pch = 8, cex = 3, lwd = 3, col = "black")
+legend("topright", legend = paste("Cluster", 1:3), col = 2:4, pch = 16)
+grid()
+
+# Plot 3: Clusters (Petal Length vs Petal Width)
+plot(X_scaled[, 3], X_scaled[, 4],
+     col = kmeans_model$cluster + 1, pch = 16, cex = 1.3,
+     xlab = "Petal Length (scaled)", ylab = "Petal Width (scaled)",
+     main = "Clusters (Feature 3 vs 4)")
+points(kmeans_model$centers[, 3], kmeans_model$centers[, 4],
+       pch = 8, cex = 3, lwd = 3, col = "black")
+legend("topright", legend = paste("Cluster", 1:3), col = 2:4, pch = 16)
+grid()
+
+# Plot 4: Silhouette Plot
+plot(sil, col = 2:4, border = NA, main = "Silhouette Plot")
+
+par(mfrow = c(1, 1))
+
+# Bonus: ggplot2 + PCA visualization
+fviz_cluster(kmeans_model, data = X_scaled, geom = "point",
+             pointsize = 2, main = "K-Means Clustering (PCA Projection)")
+```
+
+---
+
+## Expected Output
+
+```
+Dataset: Iris (Unsupervised - no labels used)
+Shape: (150, 4)
+
+Elbow Method (WCSS):
+  K=1: 596.00
+  K=2: 220.35
+  K=3: 139.82
+  K=4: 113.10
+  K=5: 95.98
+  K=6: 82.36
+  K=7: 72.48
+
+K-Means applied (K=3)
+Cluster Distribution: [50, 62, 38]
+Silhouette Score: 0.4598
+```

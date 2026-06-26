@@ -1,0 +1,346 @@
+If you're doing this for **Mumbai University MSc-IT practicals**, I recommend installing **HBase in standalone mode** on Windows. It's much simpler than setting up a full distributed cluster and is sufficient for most practicals.
+
+---
+
+# Install and Configure HBase on Windows
+
+## 1. Prerequisites
+
+* Java JDK 8 or 11
+* Hadoop (already installed)
+* HDFS (optional for standalone mode, required for distributed mode)
+* Apache HBase (2.x recommended)
+
+Verify Java
+
+```bash
+java -version
+```
+
+Verify Hadoop
+
+```bash
+hadoop version
+```
+
+---
+
+# 2. Download HBase
+
+Download the binary release of **Apache HBase 2.4.x** or **2.5.x** from the Apache archive.
+
+Extract it to
+
+```text
+C:\hbase
+```
+
+Directory
+
+```text
+C:\hbase
+│
+├── bin
+├── conf
+├── lib
+├── logs
+└── ...
+```
+
+---
+
+# 3. Set Environment Variables
+
+Create
+
+```text
+HBASE_HOME = C:\hbase
+```
+
+Add to PATH
+
+```text
+%HBASE_HOME%\bin
+```
+
+Verify
+
+```bash
+hbase version
+```
+
+Example
+
+```text
+2.4.17
+```
+
+---
+
+# 4. Configure HBase
+
+Open
+
+```text
+C:\hbase\conf\hbase-site.xml
+```
+
+Replace with
+
+```xml
+<configuration>
+
+    <!-- Data directory -->
+    <property>
+        <name>hbase.rootdir</name>
+        <value>file:///C:/hbase/data</value>
+    </property>
+
+    <!-- Run in standalone mode -->
+    <property>
+        <name>hbase.cluster.distributed</name>
+        <value>false</value>
+    </property>
+
+</configuration>
+```
+
+---
+
+# 5. Configure JAVA_HOME
+
+Open
+
+```text
+C:\hbase\conf\hbase-env.cmd
+```
+
+Find
+
+```cmd
+set JAVA_HOME=
+```
+
+Replace with
+
+```cmd
+set JAVA_HOME=C:\Program Files\Java\jdk-17
+```
+
+or
+
+```cmd
+set JAVA_HOME=C:\Program Files\Java\jdk1.8.0_xxx
+```
+
+according to your JDK.
+
+---
+
+# 6. Start HBase
+
+Open Command Prompt.
+
+Navigate to
+
+```cmd
+cd C:\hbase\bin
+```
+
+Run
+
+```cmd
+start-hbase.cmd
+```
+
+If successful you'll see services starting.
+
+---
+
+# 7. Start HBase Shell
+
+```cmd
+hbase shell
+```
+
+Expected
+
+```text
+hbase(main):001:0>
+```
+
+---
+
+# 8. Verify Installation
+
+Run
+
+```ruby
+status
+```
+
+Expected
+
+```text
+1 active master
+```
+
+---
+
+# 9. Create Your First Table
+
+```ruby
+create 'student','info'
+```
+
+List Tables
+
+```ruby
+list
+```
+
+Expected
+
+```text
+TABLE
+
+student
+```
+
+---
+
+# 10. Insert Data
+
+```ruby
+put 'student','101','info:name','Alice'
+
+put 'student','101','info:age','22'
+
+put 'student','101','info:city','Mumbai'
+```
+
+---
+
+# 11. Retrieve Data
+
+```ruby
+get 'student','101'
+```
+
+---
+
+# 12. Scan Table
+
+```ruby
+scan 'student'
+```
+
+---
+
+# 13. Delete Data
+
+Delete a column
+
+```ruby
+delete 'student','101','info:city'
+```
+
+Delete entire row
+
+```ruby
+deleteall 'student','101'
+```
+
+---
+
+# 14. Disable & Drop Table
+
+```ruby
+disable 'student'
+
+drop 'student'
+```
+
+---
+
+# 15. Exit
+
+```ruby
+exit
+```
+
+---
+
+# Common Errors
+
+### JAVA_HOME not set
+
+Check
+
+```cmd
+echo %JAVA_HOME%
+```
+
+---
+
+### HBase command not found
+
+Check
+
+```cmd
+echo %HBASE_HOME%
+```
+
+---
+
+### Port already in use
+
+Default HBase ports
+
+```text
+16010
+16020
+16030
+```
+
+Kill the conflicting process or change the port.
+
+---
+
+### Could not find or load main class
+
+Usually caused by
+
+* Wrong JAVA_HOME
+* Unsupported JDK version
+
+---
+
+## If you already have Hadoop installed
+
+You can also configure HBase to use **HDFS** instead of the local filesystem by changing:
+
+```xml
+<property>
+    <name>hbase.rootdir</name>
+    <value>hdfs://localhost:9000/hbase</value>
+</property>
+
+<property>
+    <name>hbase.cluster.distributed</name>
+    <value>true</value>
+</property>
+
+<property>
+    <name>hbase.zookeeper.property.dataDir</name>
+    <value>C:/hbase/zookeeper</value>
+</property>
+```
+
+This is the preferred configuration when HBase is used as part of the Hadoop ecosystem.
+
+---
+
+### A quick question before you try installing it:
+
+Are you installing HBase on **Windows** or are you using **WSL/Ubuntu/Linux**? The Windows binaries for HBase can be a bit finicky, so the setup steps differ slightly depending on the platform.

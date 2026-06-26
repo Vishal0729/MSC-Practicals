@@ -1,0 +1,197 @@
+# MongoDB with R — Store and Manipulate Data
+
+## Part 1: Install MongoDB, Check Version & View Databases (5 Marks)
+
+```bash
+# ===== Step 1: Download MongoDB Community (no admin - zip version) =====
+# Download from: mongodb.com/try/download/community
+# Extract to: C:\Users\YourName\tools\mongodb
+
+# ===== Step 2: Create data directory =====
+mkdir C:\Users\YourName\tools\mongodb\data
+
+# ===== Step 3: Start MongoDB server =====
+C:\Users\YourName\tools\mongodb\bin\mongod --dbpath C:\Users\YourName\tools\mongodb\data
+
+# ===== Step 4: Open another terminal — Check version =====
+C:\Users\YourName\tools\mongodb\bin\mongosh
+```
+
+```javascript
+// In Mongo Shell (mongosh):
+
+// Step 5: Check version
+db.version()
+// Output: 7.0.x
+
+// Step 6: View all databases
+show dbs
+// Output:
+// admin    40.00 KiB
+// config   60.00 KiB
+// local    72.00 KiB
+```
+
+---
+
+## Part 2: Create Database, Collection & Insert Documents in R (5 Marks)
+
+```r
+# Required library
+library(mongolite)
+
+# ===== Step 1: Connect to MongoDB and Create Database + Collection =====
+# (Database and collection are created automatically on first insert)
+con <- mongo(collection = "students", db = "university_db",
+             url = "mongodb://localhost:27017")
+
+cat("Connected to MongoDB!\n")
+
+# ===== Step 2: Insert Documents =====
+students <- data.frame(
+  name = c("Alice", "Bob", "Charlie", "Diana", "Edward"),
+  age = c(21, 23, 22, 24, 20),
+  course = c("Data Science", "AI", "Data Science", "ML", "AI"),
+  gpa = c(3.8, 3.5, 3.9, 3.7, 3.6),
+  stringsAsFactors = FALSE
+)
+
+con$insert(students)
+cat("5 documents inserted into 'students' collection\n")
+
+# ===== Step 3: Verify =====
+cat(sprintf("Total documents: %d\n", con$count()))
+cat("\nAll documents:\n")
+print(con$find())
+```
+
+**Same in MongoDB Compass (GUI):**
+```
+1. Open MongoDB Compass → Connect to localhost:27017
+2. Click "Create Database" → Database: university_db, Collection: students
+3. Click "Add Data" → Insert Document:
+   {"name": "Alice", "age": 21, "course": "Data Science", "gpa": 3.8}
+4. Repeat for other documents
+```
+
+---
+
+## Part 3: Two Collections, Insert, Update & Delete (5 Marks)
+
+```r
+# Required library
+library(mongolite)
+
+# ===== Step 1: Create TWO collections =====
+col_teachers <- mongo(collection = "teachers", db = "university_db",
+                      url = "mongodb://localhost:27017")
+col_courses <- mongo(collection = "courses", db = "university_db",
+                     url = "mongodb://localhost:27017")
+
+cat("Two collections created: 'teachers' and 'courses'\n")
+
+# ===== Step 2: Insert into BOTH collections =====
+teachers <- data.frame(
+  name = c("Dr. Smith", "Dr. Patel", "Dr. Lee"),
+  department = c("CS", "IT", "CS"),
+  experience = c(10, 8, 12),
+  stringsAsFactors = FALSE
+)
+col_teachers$insert(teachers)
+cat("Inserted 3 documents into 'teachers'\n")
+
+courses <- data.frame(
+  title = c("Big Data", "Machine Learning", "Cloud Computing"),
+  credits = c(4, 3, 3),
+  semester = c(3, 4, 4),
+  stringsAsFactors = FALSE
+)
+col_courses$insert(courses)
+cat("Inserted 3 documents into 'courses'\n")
+
+# Verify both
+cat(sprintf("\nTeachers count: %d\n", col_teachers$count()))
+cat(sprintf("Courses count: %d\n", col_courses$count()))
+
+# ===== Step 3: Insert MORE into same collection (teachers) =====
+more_teachers <- data.frame(
+  name = c("Dr. Kumar", "Dr. Wang"),
+  department = c("IT", "CS"),
+  experience = c(6, 15),
+  stringsAsFactors = FALSE
+)
+col_teachers$insert(more_teachers)
+cat("\nInserted 2 more into 'teachers' (total:", col_teachers$count(), ")\n")
+
+cat("\nAll Teachers:\n")
+print(col_teachers$find())
+
+# ===== Step 4: Update one collection (teachers) =====
+# Update Dr. Smith's experience from 10 to 12
+col_teachers$update(
+  query = '{"name": "Dr. Smith"}',
+  update = '{"$set": {"experience": 12, "department": "AI"}}'
+)
+cat("\nUpdated Dr. Smith (experience=12, department=AI)\n")
+
+# Verify update
+cat("After update:\n")
+print(col_teachers$find('{"name": "Dr. Smith"}'))
+
+# ===== Step 5: Delete one collection (courses) =====
+col_courses$drop()
+cat("\n'courses' collection DELETED\n")
+
+# Verify deletion
+cat(sprintf("Courses collection exists: %s\n", 
+            "courses" %in% mongo(db = "university_db", 
+            url = "mongodb://localhost:27017")$run('{"listCollections": 1}')$cursor$firstBatch$name))
+
+# Final state
+cat("\n--- FINAL STATE ---\n")
+cat(sprintf("Teachers collection: %d documents\n", col_teachers$count()))
+print(col_teachers$find())
+```
+
+---
+
+## Expected Output
+
+```
+Connected to MongoDB!
+5 documents inserted into 'students' collection
+Total documents: 5
+
+Two collections created: 'teachers' and 'courses'
+Inserted 3 documents into 'teachers'
+Inserted 3 documents into 'courses'
+
+Teachers count: 3
+Courses count: 3
+
+Inserted 2 more into 'teachers' (total: 5)
+
+All Teachers:
+       name department experience
+1 Dr. Smith         CS         10
+2 Dr. Patel         IT          8
+3   Dr. Lee         CS         12
+4 Dr. Kumar         IT          6
+5  Dr. Wang         CS         15
+
+Updated Dr. Smith (experience=12, department=AI)
+After update:
+       name department experience
+1 Dr. Smith         AI         12
+
+'courses' collection DELETED
+
+--- FINAL STATE ---
+Teachers collection: 5 documents
+       name department experience
+1 Dr. Smith         AI         12
+2 Dr. Patel         IT          8
+3   Dr. Lee         CS         12
+4 Dr. Kumar         IT          6
+5  Dr. Wang         CS         15
+```

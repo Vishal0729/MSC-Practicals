@@ -1,0 +1,251 @@
+# HiveQL — Top-Selling Products from Sales Dataset
+
+## Step 1: Download Dataset
+
+Download from Kaggle: `sales_data_sample.csv` and place it in HDFS.
+
+```bash
+# Upload to HDFS
+hdfs dfs -mkdir -p /user/hive/sales
+hdfs dfs -put sales_data_sample.csv /user/hive/sales/
+```
+
+---
+
+## Step 2: HiveQL — Create Table, Load Data & Query (10 Marks)
+
+```sql
+-- ===== Step 1: Create Database =====
+CREATE DATABASE IF NOT EXISTS sales_db;
+USE sales_db;
+
+-- ===== Step 2: Create Table =====
+CREATE TABLE IF NOT EXISTS sales (
+    ORDERNUMBER INT,
+    QUANTITYORDERED INT,
+    PRICEEACH DOUBLE,
+    ORDERLINENUMBER INT,
+    SALES DOUBLE,
+    ORDERDATE STRING,
+    STATUS STRING,
+    QTR_ID INT,
+    MONTH_ID INT,
+    YEAR_ID INT,
+    PRODUCTLINE STRING,
+    MSRP INT,
+    PRODUCTCODE STRING,
+    CUSTOMERNAME STRING,
+    PHONE STRING,
+    ADDRESSLINE1 STRING,
+    ADDRESSLINE2 STRING,
+    CITY STRING,
+    STATE STRING,
+    POSTALCODE STRING,
+    COUNTRY STRING,
+    TERRITORY STRING,
+    CONTACTLASTNAME STRING,
+    CONTACTFIRSTNAME STRING,
+    DEALSIZE STRING
+)
+ROW FORMAT DELIMITED
+FIELDS TERMINATED BY ','
+STORED AS TEXTFILE
+TBLPROPERTIES ("skip.header.line.count"="1");
+
+-- ===== Step 3: Load Data =====
+LOAD DATA INPATH '/user/hive/sales/sales_data_sample.csv' INTO TABLE sales;
+
+-- Verify
+SELECT COUNT(*) AS total_records FROM sales;
+SELECT * FROM sales LIMIT 5;
+
+
+-- ===== Step 4: Top-Selling Products by Total Revenue =====
+SELECT
+    PRODUCTLINE,
+    COUNT(*) AS total_orders,
+    SUM(QUANTITYORDERED) AS total_quantity,
+    ROUND(SUM(SALES), 2) AS total_revenue,
+    ROUND(AVG(SALES), 2) AS avg_order_value
+FROM sales
+GROUP BY PRODUCTLINE
+ORDER BY total_revenue DESC;
+
+
+-- ===== Step 5: Top 10 Product Codes by Quantity Sold =====
+SELECT
+    PRODUCTCODE,
+    PRODUCTLINE,
+    SUM(QUANTITYORDERED) AS total_qty_sold,
+    ROUND(SUM(SALES), 2) AS total_revenue
+FROM sales
+GROUP BY PRODUCTCODE, PRODUCTLINE
+ORDER BY total_qty_sold DESC
+LIMIT 10;
+
+
+-- ===== Step 6: Top-Selling Products by Year =====
+SELECT
+    YEAR_ID,
+    PRODUCTLINE,
+    SUM(QUANTITYORDERED) AS total_quantity,
+    ROUND(SUM(SALES), 2) AS total_revenue
+FROM sales
+GROUP BY YEAR_ID, PRODUCTLINE
+ORDER BY YEAR_ID, total_revenue DESC;
+
+
+-- ===== Step 7: Top-Selling Products by Country =====
+SELECT
+    COUNTRY,
+    PRODUCTLINE,
+    SUM(QUANTITYORDERED) AS total_quantity,
+    ROUND(SUM(SALES), 2) AS total_revenue
+FROM sales
+GROUP BY COUNTRY, PRODUCTLINE
+ORDER BY total_revenue DESC
+LIMIT 10;
+
+
+-- ===== Step 8: Quarterly Sales Performance =====
+SELECT
+    YEAR_ID,
+    QTR_ID,
+    PRODUCTLINE,
+    ROUND(SUM(SALES), 2) AS quarterly_revenue
+FROM sales
+GROUP BY YEAR_ID, QTR_ID, PRODUCTLINE
+ORDER BY YEAR_ID, QTR_ID, quarterly_revenue DESC;
+
+
+-- ===== Step 9: Deal Size Analysis =====
+SELECT
+    DEALSIZE,
+    COUNT(*) AS order_count,
+    SUM(QUANTITYORDERED) AS total_quantity,
+    ROUND(SUM(SALES), 2) AS total_revenue,
+    ROUND(AVG(SALES), 2) AS avg_revenue
+FROM sales
+GROUP BY DEALSIZE
+ORDER BY total_revenue DESC;
+
+
+-- ===== Step 10: Monthly Trend for Top Product Line =====
+SELECT
+    MONTH_ID,
+    SUM(QUANTITYORDERED) AS total_quantity,
+    ROUND(SUM(SALES), 2) AS monthly_revenue
+FROM sales
+WHERE PRODUCTLINE = 'Classic Cars'
+GROUP BY MONTH_ID
+ORDER BY MONTH_ID;
+
+
+-- ===== Step 11: Export Results for Plotting =====
+-- Save top-selling products result to HDFS
+INSERT OVERWRITE DIRECTORY '/user/hive/output/top_products'
+ROW FORMAT DELIMITED FIELDS TERMINATED BY ','
+SELECT
+    PRODUCTLINE,
+    SUM(QUANTITYORDERED) AS total_quantity,
+    ROUND(SUM(SALES), 2) AS total_revenue
+FROM sales
+GROUP BY PRODUCTLINE
+ORDER BY total_revenue DESC;
+```
+
+---
+
+## Step 3: Plot the Graph (5 Marks)
+
+Since HiveQL cannot plot graphs directly, we use Python **only for plotting** the Hive query results.
+
+```python
+# Required libraries
+import pandas as pd
+import matplotlib.pyplot as plt
+
+# ===== Step 1: Load the dataset (same data Hive used) =====
+df = pd.read_csv("sales_data_sample.csv", encoding='latin-1')
+
+# --- If reading Hive output from HDFS: ---
+# df_results = pd.read_csv("top_products_output.csv", names=['PRODUCTLINE','total_qty','total_revenue'])
+# -------------------------------------------
+
+# ===== Step 2: Aggregate (same as HiveQL query) =====
+top_products = df.groupby('PRODUCTLINE').agg(
+    total_quantity=('QUANTITYORDERED', 'sum'),
+    total_revenue=('SALES', 'sum')
+).reset_index().sort_values('total_revenue', ascending=False)
+
+print("Top-Selling Products by Revenue:")
+print(top_products)
+
+# ===== Step 3: Plot 1 — Bar Chart (Revenue by Product Line) =====
+plt.figure(figsize=(10, 6))
+plt.barh(top_products['PRODUCTLINE'], top_products['total_revenue'], color='steelblue', edgecolor='black')
+plt.xlabel("Total Revenue ($)")
+plt.ylabel("Product Line")
+plt.title("Top-Selling Products by Revenue (HiveQL Result)")
+plt.gca().invert_yaxis()  # Highest on top
+plt.tight_layout()
+plt.savefig("top_products_revenue.png")
+plt.show()
+
+# ===== Step 4: Plot 2 — Bar Chart (Quantity by Product Line) =====
+plt.figure(figsize=(10, 6))
+plt.bar(top_products['PRODUCTLINE'], top_products['total_quantity'], color='coral', edgecolor='black')
+plt.xlabel("Product Line")
+plt.ylabel("Total Quantity Sold")
+plt.title("Top-Selling Products by Quantity Sold")
+plt.xticks(rotation=45, ha='right')
+plt.tight_layout()
+plt.savefig("top_products_quantity.png")
+plt.show()
+
+# ===== Step 5: Plot 3 — Pie Chart (Revenue Share) =====
+plt.figure(figsize=(8, 8))
+plt.pie(top_products['total_revenue'], labels=top_products['PRODUCTLINE'],
+        autopct='%1.1f%%', startangle=140, colors=plt.cm.Set3.colors)
+plt.title("Revenue Share by Product Line")
+plt.tight_layout()
+plt.savefig("revenue_pie_chart.png")
+plt.show()
+
+# ===== Step 6: Plot 4 — Yearly Trend =====
+yearly = df.groupby(['YEAR_ID', 'PRODUCTLINE'])['SALES'].sum().reset_index()
+top3 = top_products['PRODUCTLINE'].head(3).tolist()
+yearly_top3 = yearly[yearly['PRODUCTLINE'].isin(top3)]
+
+plt.figure(figsize=(10, 6))
+for product in top3:
+    data = yearly_top3[yearly_top3['PRODUCTLINE'] == product]
+    plt.plot(data['YEAR_ID'], data['SALES'], marker='o', linewidth=2, label=product)
+plt.xlabel("Year")
+plt.ylabel("Total Revenue ($)")
+plt.title("Yearly Revenue Trend - Top 3 Product Lines")
+plt.legend()
+plt.grid(True, alpha=0.3)
+plt.tight_layout()
+plt.savefig("yearly_trend.png")
+plt.show()
+```
+
+---
+
+## Expected Output
+
+### HiveQL Query Result:
+```
++----------------+-------------+----------------+---------------+----------------+
+| PRODUCTLINE    | total_orders| total_quantity  | total_revenue | avg_order_value|
++----------------+-------------+----------------+---------------+----------------+
+| Classic Cars   |         967 |          33992 |   3919615.66  |     4052.86    |
+| Vintage Cars   |         607 |          21069 |   2449600.51  |     4035.59    |
+| Motorcycles    |         331 |          11663 |   1166388.34  |     3522.32    |
+| Trucks and Buses|        307 |          10777 |   1127789.69  |     3672.94    |
+| Planes         |         306 |          10727 |   1124118.57  |     3673.59    |
+| Ships          |         234 |           8127 |    714437.13  |     3052.30    |
+| Trains         |          77 |           2712 |    226243.47  |     2938.23    |
++----------------+-------------+----------------+---------------+----------------+
+```

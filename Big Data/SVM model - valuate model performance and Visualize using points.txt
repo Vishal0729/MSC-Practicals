@@ -1,0 +1,155 @@
+
+# SVM Classification
+
+## Python
+
+```python
+# ===== Step 1: Load packages =====
+import numpy as np
+from sklearn.svm import SVC
+from sklearn.datasets import load_iris
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import accuracy_score, classification_report, confusion_matrix
+import matplotlib.pyplot as plt
+
+# ===== Step 2: Load Dataset (use 2 features for visualization) =====
+iris = load_iris()
+X = iris.data[:, :2]  # Only sepal_length & sepal_width (for 2D plot)
+y = iris.target
+
+print("Dataset: Iris (2 features for visualization)")
+print(f"Samples: {len(X)}, Classes: {list(iris.target_names)}")
+
+# ===== Step 3: Split Data =====
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42)
+print(f"Train: {len(X_train)}, Test: {len(X_test)}")
+
+# ===== Step 4: Create SVM Model (5 Marks) =====
+svm_model = SVC(kernel='rbf', C=1.0, gamma='scale', random_state=42)
+svm_model.fit(X_train, y_train)
+print("\nSVM Model created successfully!")
+print(f"Kernel: RBF, Support Vectors: {svm_model.n_support_}")
+
+# ===== Step 5: Evaluate Model Performance (5 Marks) =====
+y_pred = svm_model.predict(X_test)
+accuracy = accuracy_score(y_test, y_pred)
+
+print(f"\nAccuracy: {accuracy * 100:.2f}%")
+print("\nClassification Report:")
+print(classification_report(y_test, y_pred, target_names=iris.target_names))
+print("Confusion Matrix:")
+print(confusion_matrix(y_test, y_pred))
+
+# ===== Step 6: Visualize using Points (5 Marks) =====
+plt.figure(figsize=(10, 6))
+colors = ['red', 'green', 'blue']
+markers = ['o', 's', '^']
+
+# Plot test points
+for i, class_name in enumerate(iris.target_names):
+    mask = y_test == i
+    plt.scatter(X_test[mask, 0], X_test[mask, 1],
+                c=colors[i], marker=markers[i], s=100,
+                edgecolors='black', label=f'{class_name} (Actual)')
+
+# Plot misclassified points
+misclassified = y_test != y_pred
+if misclassified.any():
+    plt.scatter(X_test[misclassified, 0], X_test[misclassified, 1],
+                c='none', marker='o', s=250, edgecolors='black',
+                linewidths=2, label='Misclassified')
+
+plt.xlabel("Sepal Length")
+plt.ylabel("Sepal Width")
+plt.title(f"SVM Classification (Accuracy: {accuracy*100:.2f}%)")
+plt.legend()
+plt.grid(True, alpha=0.3)
+plt.tight_layout()
+plt.savefig("svm_points.png")
+plt.show()
+```
+
+---
+
+## R
+
+```r
+# ===== Step 1: Load packages =====
+library(e1071)   # SVM
+library(caret)   # Evaluation
+
+# ===== Step 2: Load Dataset (2 features for visualization) =====
+data(iris)
+df <- iris[, c("Sepal.Length", "Sepal.Width", "Species")]
+cat("Dataset: Iris (2 features for visualization)\n")
+cat(sprintf("Samples: %d, Classes: %s\n", nrow(df), paste(levels(df$Species), collapse=", ")))
+
+# ===== Step 3: Split Data =====
+set.seed(42)
+train_idx <- sample(1:nrow(df), 0.7 * nrow(df))
+train_data <- df[train_idx, ]
+test_data <- df[-train_idx, ]
+cat(sprintf("Train: %d, Test: %d\n", nrow(train_data), nrow(test_data)))
+
+# ===== Step 4: Create SVM Model (5 Marks) =====
+svm_model <- svm(Species ~ ., data = train_data, kernel = "radial", cost = 1)
+cat("\nSVM Model created successfully!\n")
+cat(sprintf("Kernel: Radial, Support Vectors: %d\n", sum(svm_model$nSV)))
+
+# ===== Step 5: Evaluate Model Performance (5 Marks) =====
+y_pred <- predict(svm_model, test_data)
+accuracy <- sum(y_pred == test_data$Species) / nrow(test_data)
+
+cat(sprintf("\nAccuracy: %.2f%%\n", accuracy * 100))
+cat("\nConfusion Matrix:\n")
+cm <- table(Predicted = y_pred, Actual = test_data$Species)
+print(cm)
+
+# ===== Step 6: Visualize using Points (5 Marks) =====
+colors <- c("red", "green", "blue")
+pch_vals <- c(16, 17, 18)
+
+plot(test_data$Sepal.Length, test_data$Sepal.Width,
+     col = colors[as.numeric(test_data$Species)],
+     pch = pch_vals[as.numeric(test_data$Species)],
+     cex = 1.5, xlab = "Sepal Length", ylab = "Sepal Width",
+     main = sprintf("SVM Classification (Accuracy: %.2f%%)", accuracy * 100))
+
+# Mark misclassified
+misclassified <- which(y_pred != test_data$Species)
+if (length(misclassified) > 0) {
+  points(test_data$Sepal.Length[misclassified],
+         test_data$Sepal.Width[misclassified],
+         cex = 3, pch = 1, lwd = 2)
+}
+
+legend("topright", legend = c(levels(iris$Species), "Misclassified"),
+       col = c(colors, "black"), pch = c(pch_vals, 1), pt.cex = 1.5)
+grid()
+```
+
+---
+
+## Expected Output
+
+```
+Dataset: Iris (2 features for visualization)
+Samples: 150, Classes: ['setosa', 'versicolor', 'virginica']
+Train: 105, Test: 45
+
+SVM Model created successfully!
+Kernel: RBF, Support Vectors: [12 25 22]
+
+Accuracy: 82.22%
+
+Classification Report:
+              precision    recall  f1-score
+      setosa       1.00      1.00      1.00
+  versicolor       0.72      0.77      0.74
+   virginica       0.78      0.73      0.76
+
+Confusion Matrix:
+[[19  0  0]
+ [ 0 10  3]
+ [ 0  4  9]]
+```

@@ -1,0 +1,328 @@
+# Use Pig to Analyze a Large Dataset
+
+## Aim
+
+To use Apache Pig to analyze a large dataset stored in HDFS and perform filtering and aggregation operations using Pig Latin.
+
+---
+
+# 1. Prerequisites
+
+* Java JDK 8 or above
+* Hadoop installed and running
+* HDFS configured
+* Apache Pig installed
+* Environment variables configured (`JAVA_HOME`, `HADOOP_HOME`, `PIG_HOME`)
+
+Verify Hadoop is running:
+
+```bash
+jps
+```
+
+Expected Output
+
+```text
+NameNode
+DataNode
+SecondaryNameNode
+ResourceManager
+NodeManager
+```
+
+---
+
+# 2. Install and Configure Pig
+
+Download Apache Pig and extract it to:
+
+```text
+C:\pig
+```
+
+Directory Structure
+
+```text
+C:\pig
+│
+├── bin
+├── lib
+├── conf
+└── ...
+```
+
+---
+
+# 3. Set Environment Variables
+
+```cmd
+set PIG_HOME=C:\pig
+set HADOOP_HOME=C:\hadoop
+set PATH=%PIG_HOME%\bin;%HADOOP_HOME%\bin;%PATH%
+```
+
+Verify Installation
+
+```bash
+pig -version
+```
+
+Expected Output
+
+```text
+Apache Pig version 0.17.x
+```
+
+---
+
+# 4. Start Pig
+
+Run Pig in local mode:
+```bash
+pig -x local
+```
+
+Or in Hadoop mode (do this step only if question says to do through Hive or hadoop):
+```bash
+pig
+```
+
+Pig Prompt
+```text
+grunt>
+```
+
+---
+
+# 5. Create Sample Dataset
+
+Create a file named:
+
+```text
+employee.csv
+```
+
+Sample Data
+
+```text
+101,Alice,HR,35000
+102,Bob,IT,50000
+103,Charlie,Sales,45000
+104,David,IT,55000
+105,Eva,HR,40000
+106,Frank,Sales,38000
+107,Grace,IT,60000
+108,Helen,Finance,52000
+109,Ivan,Finance,48000
+110,John,IT,70000
+```
+
+---
+
+# 6. Upload Dataset to HDFS (do this step only if question says to do through Hive or hadoop)
+
+```bash
+hdfs dfs -mkdir /pig_data
+hdfs dfs -put employee.csv /pig_data
+```
+
+Verify
+```bash
+hdfs dfs -ls /pig_data
+```
+
+---
+
+# Part 1: Analyze a Large Dataset (10 Marks)
+
+### Step 1: Load Data
+
+```pig
+employee = LOAD 'employee.csv' #(pr the oathof the file)
+USING PigStorage(',')
+AS (
+    id:int,
+    name:chararray,
+    department:chararray,
+    salary:int
+);
+```
+
+Display Data
+
+```pig
+DUMP employee;
+```
+
+---
+
+### Step 2: Describe Data
+
+```pig
+DESCRIBE employee;
+```
+
+---
+
+### Step 3: Display Schema
+
+```pig
+ILLUSTRATE employee;
+```
+
+---
+
+### Step 4: Count Total Records
+
+```pig
+emp_group = GROUP employee ALL;
+
+emp_count = FOREACH emp_group
+GENERATE COUNT(employee);
+
+DUMP emp_count;
+```
+
+---
+
+### Step 5: View Data
+
+```pig
+LIMIT employee 5;
+
+DUMP employee;
+```
+
+---
+
+# Part 2: Filtering and Aggregation (5 Marks)
+
+## Filter Employees from IT Department
+
+```pig
+it_emp = FILTER employee
+BY department == 'IT';
+
+DUMP it_emp;
+```
+
+---
+
+## Filter Salary Greater Than 50000
+
+```pig
+high_salary = FILTER employee
+BY salary > 50000;
+
+DUMP high_salary;
+```
+
+---
+
+## Group by Department
+
+```pig
+dept_group = GROUP employee
+BY department;
+
+DUMP dept_group;
+```
+
+---
+
+## Count Employees in Each Department
+
+```pig
+dept_count = FOREACH dept_group
+GENERATE
+group,
+COUNT(employee);
+
+DUMP dept_count;
+```
+
+---
+
+## Average Salary Department-wise
+
+```pig
+dept_avg = FOREACH dept_group
+GENERATE
+group,
+AVG(employee.salary);
+
+DUMP dept_avg;
+```
+
+---
+
+## Maximum Salary
+
+```pig
+max_salary = FOREACH dept_group
+GENERATE
+group,
+MAX(employee.salary);
+
+DUMP max_salary;
+```
+
+---
+
+## Minimum Salary
+
+```pig
+min_salary = FOREACH dept_group
+GENERATE
+group,
+MIN(employee.salary);
+
+DUMP min_salary;
+```
+
+---
+
+## Total Salary Department-wise
+
+```pig
+dept_sum = FOREACH dept_group
+GENERATE
+group,
+SUM(employee.salary);
+
+DUMP dept_sum;
+```
+
+---
+
+## Sort Employees by Salary
+
+Ascending
+
+```pig
+sorted_emp = ORDER employee
+BY salary;
+
+DUMP sorted_emp;
+```
+
+Descending
+
+```pig
+sorted_desc = ORDER employee
+BY salary DESC;
+
+DUMP sorted_desc;
+```
+
+---
+
+## Top 5 Highest Paid Employees
+
+```pig
+top_emp = LIMIT sorted_desc 5;
+
+DUMP top_emp;
+```
+
+---

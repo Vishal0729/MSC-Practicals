@@ -1,0 +1,212 @@
+# MongoDB with Python — Store and Manipulate Data
+
+## Part 1: Install MongoDB, Check Version & View Databases (5 Marks)
+
+```bash
+# ===== Step 1: Download MongoDB (zip version - no admin) =====
+# Extract to: C:\Users\YourName\tools\mongodb
+
+# ===== Step 2: Create data directory =====
+mkdir C:\Users\YourName\tools\mongodb\data
+
+# ===== Step 3: Start MongoDB server =====
+C:\Users\YourName\tools\mongodb\bin\mongod --dbpath C:\Users\YourName\tools\mongodb\data
+
+# ===== Step 4: Check version & view databases (mongosh) =====
+C:\Users\YourName\tools\mongodb\bin\mongosh
+```
+
+```javascript
+// In Mongo Shell:
+db.version()        // Output: 7.0.x
+show dbs            // Output: admin, config, local
+```
+
+### Same via Python:
+
+```python
+# Required library
+# pip install pymongo
+from pymongo import MongoClient
+
+# ===== Step 5: Connect and check version =====
+client = MongoClient("mongodb://localhost:27017/")
+print("Server Version:", client.server_info()['version'])
+
+# ===== Step 6: View all databases =====
+print("\nAll Databases:")
+for db_name in client.list_database_names():
+    print(f"  - {db_name}")
+```
+
+---
+
+## Part 2: Create Database, Collection & Insert Documents (5 Marks)
+
+```python
+from pymongo import MongoClient
+
+# ===== Step 1: Connect to MongoDB =====
+client = MongoClient("mongodb://localhost:27017/")
+
+# ===== Step 2: Create Database and Collection (auto-created on insert) =====
+db = client["university_db"]
+collection = db["students"]
+
+# Drop if exists (fresh start)
+collection.drop()
+
+print("Connected to MongoDB!")
+
+# ===== Step 3: Insert Documents =====
+students = [
+    {"name": "Alice", "age": 21, "course": "Data Science", "gpa": 3.8},
+    {"name": "Bob", "age": 23, "course": "AI", "gpa": 3.5},
+    {"name": "Charlie", "age": 22, "course": "Data Science", "gpa": 3.9},
+    {"name": "Diana", "age": 24, "course": "ML", "gpa": 3.7},
+    {"name": "Edward", "age": 20, "course": "AI", "gpa": 3.6}
+]
+
+result = collection.insert_many(students)
+print(f"Inserted {len(result.inserted_ids)} documents into 'students'")
+
+# ===== Step 4: Verify =====
+print(f"Total documents: {collection.count_documents({})}")
+print("\nAll documents:")
+for doc in collection.find({}, {"_id": 0}):
+    print(f"  {doc}")
+```
+
+**Same in MongoDB Compass (GUI):**
+```
+1. Open Compass → Connect to localhost:27017
+2. Create Database: university_db, Collection: students
+3. Add Data → Insert Document:
+   {"name": "Alice", "age": 21, "course": "Data Science", "gpa": 3.8}
+```
+
+---
+
+## Part 3: Two Collections, Insert, Update & Delete (5 Marks)
+
+```python
+from pymongo import MongoClient
+
+# ===== Step 1: Connect and Create TWO collections =====
+client = MongoClient("mongodb://localhost:27017/")
+db = client["university_db"]
+
+col_teachers = db["teachers"]
+col_courses = db["courses"]
+
+# Fresh start
+col_teachers.drop()
+col_courses.drop()
+
+print("Two collections created: 'teachers' and 'courses'")
+
+# ===== Step 2: Insert into BOTH collections =====
+teachers = [
+    {"name": "Dr. Smith", "department": "CS", "experience": 10},
+    {"name": "Dr. Patel", "department": "IT", "experience": 8},
+    {"name": "Dr. Lee", "department": "CS", "experience": 12}
+]
+col_teachers.insert_many(teachers)
+print("Inserted 3 documents into 'teachers'")
+
+courses = [
+    {"title": "Big Data", "credits": 4, "semester": 3},
+    {"title": "Machine Learning", "credits": 3, "semester": 4},
+    {"title": "Cloud Computing", "credits": 3, "semester": 4}
+]
+col_courses.insert_many(courses)
+print("Inserted 3 documents into 'courses'")
+
+# Verify
+print(f"\nTeachers count: {col_teachers.count_documents({})}")
+print(f"Courses count: {col_courses.count_documents({})}")
+
+# ===== Step 3: Insert MORE into same collection (teachers) =====
+more_teachers = [
+    {"name": "Dr. Kumar", "department": "IT", "experience": 6},
+    {"name": "Dr. Wang", "department": "CS", "experience": 15}
+]
+col_teachers.insert_many(more_teachers)
+print(f"\nInserted 2 more into 'teachers' (total: {col_teachers.count_documents({})})")
+
+print("\nAll Teachers:")
+for doc in col_teachers.find({}, {"_id": 0}):
+    print(f"  {doc}")
+
+# ===== Step 4: Update one collection (teachers) =====
+col_teachers.update_one(
+    {"name": "Dr. Smith"},
+    {"$set": {"experience": 12, "department": "AI"}}
+)
+print("\nUpdated Dr. Smith (experience=12, department=AI)")
+
+print("After update:")
+doc = col_teachers.find_one({"name": "Dr. Smith"}, {"_id": 0})
+print(f"  {doc}")
+
+# ===== Step 5: Delete one collection (courses) =====
+col_courses.drop()
+print("\n'courses' collection DELETED")
+
+# Verify
+print(f"Collections in database: {db.list_collection_names()}")
+
+# Final state
+print("\n--- FINAL STATE ---")
+print(f"Teachers collection: {col_teachers.count_documents({})} documents")
+for doc in col_teachers.find({}, {"_id": 0}):
+    print(f"  {doc}")
+```
+
+---
+
+## Expected Output
+
+```
+Server Version: 7.0.12
+
+All Databases:
+  - admin
+  - config
+  - local
+
+Connected to MongoDB!
+Inserted 5 documents into 'students'
+Total documents: 5
+
+Two collections created: 'teachers' and 'courses'
+Inserted 3 documents into 'teachers'
+Inserted 3 documents into 'courses'
+
+Teachers count: 3
+Courses count: 3
+
+Inserted 2 more into 'teachers' (total: 5)
+
+All Teachers:
+  {'name': 'Dr. Smith', 'department': 'CS', 'experience': 10}
+  {'name': 'Dr. Patel', 'department': 'IT', 'experience': 8}
+  {'name': 'Dr. Lee', 'department': 'CS', 'experience': 12}
+  {'name': 'Dr. Kumar', 'department': 'IT', 'experience': 6}
+  {'name': 'Dr. Wang', 'department': 'CS', 'experience': 15}
+
+Updated Dr. Smith (experience=12, department=AI)
+After update:
+  {'name': 'Dr. Smith', 'department': 'AI', 'experience': 12}
+
+'courses' collection DELETED
+Collections in database: ['students', 'teachers']
+
+--- FINAL STATE ---
+Teachers collection: 5 documents
+  {'name': 'Dr. Smith', 'department': 'AI', 'experience': 12}
+  {'name': 'Dr. Patel', 'department': 'IT', 'experience': 8}
+  {'name': 'Dr. Lee', 'department': 'CS', 'experience': 12}
+  {'name': 'Dr. Kumar', 'department': 'IT', 'experience': 6}
+  {'name': 'Dr. Wang', 'department': 'CS', 'experience': 15}
+```

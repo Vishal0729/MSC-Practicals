@@ -1,0 +1,198 @@
+# MapReduce Word Count — Separate Mapper & Reducer Files
+
+## 1. Mapper (mapper.py) — 5 Marks
+
+```python
+#!/usr/bin/env python3
+"""mapper.py - Map phase: reads lines from stdin, emits (word, 1) pairs"""
+
+import sys
+
+# Step 1: Read each line from standard input (stdin)
+for line in sys.stdin:
+    
+    # Step 2: Remove leading/trailing whitespace
+    line = line.strip()
+    
+    # Step 3: Convert to lowercase
+    line = line.lower()
+    
+    # Step 4: Split line into words
+    words = line.split()
+    
+    # Step 5: Emit each word with count 1 (tab-separated)
+    for word in words:
+        # Remove punctuation from word
+        word = ''.join(char for char in word if char.isalnum())
+        if word:  # Skip empty strings
+            print(f"{word}\t1")
+```
+
+---
+
+## 2. Reducer (reducer.py) — 5 Marks
+
+```python
+#!/usr/bin/env python3
+"""reducer.py - Reduce phase: reads (word, 1) pairs, sums counts per word"""
+
+import sys
+
+# Step 1: Initialize variables
+current_word = None
+current_count = 0
+
+# Step 2: Read each line from stdin (output of mapper, sorted by key)
+for line in sys.stdin:
+    
+    # Step 3: Remove whitespace and split by tab
+    line = line.strip()
+    parts = line.split('\t')
+    
+    # Step 4: Skip malformed lines
+    if len(parts) != 2:
+        continue
+    
+    word = parts[0]
+    try:
+        count = int(parts[1])
+    except ValueError:
+        continue
+    
+    # Step 5: If same word as before, add to count
+    if word == current_word:
+        current_count += count
+    else:
+        # Step 6: If new word, output the previous word's total
+        if current_word is not None:
+            print(f"{current_word}\t{current_count}")
+        
+        # Step 7: Reset for new word
+        current_word = word
+        current_count = count
+
+# Step 8: Output the last word
+if current_word is not None:
+    print(f"{current_word}\t{current_count}")
+```
+
+---
+
+## 3. Execution — 5 Marks
+
+### Create Sample Input File
+
+```bash
+# Create a text file for word count
+echo "Hello World Hello
+MapReduce is powerful
+Hello from the World of MapReduce
+World is beautiful" > input.txt
+```
+
+### Method A: Test Locally (Without Hadoop)
+
+```bash
+# Step 1: Make files executable
+chmod +x mapper.py
+chmod +x reducer.py
+
+# Step 2: Test mapper alone
+echo "Hello World Hello" | python3 mapper.py
+# Output:
+# hello   1
+# world   1
+# hello   1
+
+# Step 3: Test full pipeline (mapper | sort | reducer)
+cat input.txt | python3 mapper.py | sort | python3 reducer.py
+# Output:
+# beautiful       1
+# from            1
+# hello           3
+# is              2
+# mapreduce       2
+# of              1
+# powerful        1
+# the             1
+# world           3
+```
+
+### Method B: Run on Hadoop (Hadoop Streaming)
+
+```bash
+# Step 1: Upload input file to HDFS
+hdfs dfs -mkdir -p /user/wordcount/input
+hdfs dfs -put input.txt /user/wordcount/input/
+
+# Step 2: Run MapReduce using Hadoop Streaming
+hadoop jar $HADOOP_HOME/share/hadoop/tools/lib/hadoop-streaming-*.jar \
+    -input /user/wordcount/input/input.txt \
+    -output /user/wordcount/output \
+    -mapper "python3 mapper.py" \
+    -reducer "python3 reducer.py" \
+    -file mapper.py \
+    -file reducer.py
+
+# Step 3: View output
+hdfs dfs -cat /user/wordcount/output/part-00000
+# Output:
+# beautiful       1
+# from            1
+# hello           3
+# is              2
+# mapreduce       2
+# of              1
+# powerful        1
+# the             1
+# world           3
+
+# Step 4: Download output to local
+hdfs dfs -get /user/wordcount/output/part-00000 output.txt
+cat output.txt
+```
+
+### Method C: Run on Windows (Without Hadoop)
+
+```cmd
+:: Step 1: Test locally using pipe
+type input.txt | python mapper.py | sort | python reducer.py
+
+:: Output:
+:: beautiful       1
+:: from            1
+:: hello           3
+:: is              2
+:: mapreduce       2
+:: of              1
+:: powerful        1
+:: the             1
+:: world           3
+```
+
+---
+
+## Expected Output
+
+```
+Input (input.txt):
+  Hello World Hello
+  MapReduce is powerful
+  Hello from the World of MapReduce
+  World is beautiful
+
+Command: cat input.txt | python3 mapper.py | sort | python3 reducer.py
+
+Output:
+  beautiful       1
+  from            1
+  hello           3
+  is              2
+  mapreduce       2
+  of              1
+  powerful        1
+  the             1
+  world           3
+```
+
+---

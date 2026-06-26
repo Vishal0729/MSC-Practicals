@@ -1,0 +1,309 @@
+# Illustrate JAQL Query Structure Using Sample JSON Datasets
+
+## Aim
+
+To understand the JAQL query structure using a sample JSON dataset and perform basic operations such as filtering, projection, sorting, and aggregation.
+
+---
+
+# 1. Prerequisites
+
+* JAQL installed (or IBM BigInsights with JAQL support)
+* Java JDK
+* Sample JSON dataset
+
+ Install JAQL
+
+Download JAQL and extract it to:
+
+C:\jaql
+
+Directory Structure
+
+C:\jaql
+│
+├── bin
+├── lib
+├── conf
+└── ...
+
+2. Set Environment Variables
+set JAVA_HOME=C:\Program Files\Java\jdk...
+set JAQL_HOME=C:\jaql
+set PATH=%JAQL_HOME%\bin;%PATH%
+
+Verify
+```bash
+jaql
+```
+
+---
+
+# 2. Create Sample JSON Dataset
+
+Create a file named:
+
+```text
+employee.json
+```
+
+```json
+[
+    {"id":101,"name":"Alice","department":"HR","salary":35000},
+    {"id":102,"name":"Bob","department":"IT","salary":50000},
+    {"id":103,"name":"Charlie","department":"Sales","salary":45000},
+    {"id":104,"name":"David","department":"IT","salary":55000},
+    {"id":105,"name":"Eva","department":"HR","salary":40000},
+    {"id":106,"name":"Frank","department":"Sales","salary":38000},
+    {"id":107,"name":"Grace","department":"IT","salary":60000},
+    {"id":108,"name":"Helen","department":"Finance","salary":52000},
+    {"id":109,"name":"Ivan","department":"Finance","salary":48000},
+    {"id":110,"name":"John","department":"IT","salary":70000}
+]
+```
+
+---
+
+# 3. Start JAQL
+
+```bash
+jaql
+```
+
+JAQL Prompt
+
+```text
+jaql>
+```
+
+---
+
+# Part 1: Illustrate JAQL Query Structure (10 Marks)
+
+## Step 1: Read JSON Dataset
+
+```jaql
+employees = read("employee.json");
+```
+
+---
+
+## Step 2: Display Dataset
+
+```jaql
+employees;
+```
+
+---
+
+## Step 3: Projection (Select Specific Fields)
+
+```jaql
+employees -> transform {
+    name,
+    salary
+};
+```
+
+---
+
+## Step 4: Rename Fields
+
+```jaql
+employees -> transform {
+    EmployeeName : name,
+    EmployeeSalary : salary
+};
+```
+
+---
+
+## Step 5: Sort Records
+
+```jaql
+employees -> sort by salary;
+```
+
+Descending
+
+```jaql
+employees -> sort by salary desc;
+```
+
+---
+
+## Step 6: Count Records
+
+```jaql
+employees -> aggregate count($);
+```
+
+---
+
+# Part 2: Perform Basic Operations (5 Marks)
+
+## Filter Employees from IT Department
+
+```jaql
+employees
+-> filter $.department == "IT";
+```
+
+---
+
+## Filter Salary Greater Than 50000
+
+```jaql
+employees
+-> filter $.salary > 50000;
+```
+
+---
+
+## Group by Department
+
+```jaql
+employees
+-> group by $.department into g
+-> transform {
+    Department : key,
+    Employees : count(g)
+};
+```
+
+---
+
+## Average Salary Department-wise
+
+```jaql
+employees
+-> group by $.department into g
+-> transform {
+    Department : key,
+    AverageSalary : avg(g.salary)
+};
+```
+
+---
+
+## Maximum Salary
+
+```jaql
+employees
+-> aggregate max($.salary);
+```
+
+---
+
+## Minimum Salary
+
+```jaql
+employees
+-> aggregate min($.salary);
+```
+
+---
+
+## Total Salary
+
+```jaql
+employees
+-> aggregate sum($.salary);
+```
+
+---
+
+## Top 5 Employees
+
+```jaql
+employees
+-> sort by salary desc
+-> limit 5;
+```
+
+---
+
+# Expected Output Summary
+
+| Operation  | Expected Result                                |
+| ---------- | ---------------------------------------------- |
+| Read JSON  | Dataset loaded successfully                    |
+| Display    | Shows all employee records                     |
+| Projection | Displays selected fields                       |
+| Filter     | Displays matching records                      |
+| Sort       | Records arranged in ascending/descending order |
+| Group      | Groups employees by department                 |
+| Count      | Total number of employees                      |
+| Sum        | Total salary                                   |
+| Average    | Average salary                                 |
+| Max        | Highest salary                                 |
+| Min        | Lowest salary                                  |
+| Limit      | Displays first 5 records                       |
+
+---
+
+# JAQL Query Structure
+
+The basic syntax of a JAQL query is:
+
+```jaql
+input
+-> operation1
+-> operation2
+-> operation3;
+```
+
+Example:
+
+```jaql
+employees
+-> filter $.salary > 50000
+-> sort by salary desc
+-> transform {
+    name,
+    salary
+};
+```
+
+---
+
+# Viva Questions
+
+**Q1. What is JAQL?**
+
+JAQL (JSON Query Language) is a functional query language used to process, transform, and analyze JSON data.
+
+**Q2. Which data format does JAQL primarily work with?**
+
+JSON (JavaScript Object Notation).
+
+**Q3. What is the purpose of the `filter` operation?**
+
+It selects records that satisfy a specified condition.
+
+**Q4. What is the purpose of the `transform` operation?**
+
+It projects or reshapes data by selecting or renaming fields.
+
+**Q5. What are common aggregation operations in JAQL?**
+
+* `count()`
+* `sum()`
+* `avg()`
+* `max()`
+* `min()`
+
+**Q6. What is the purpose of the `group` operation?**
+
+It groups records based on a common field so that aggregation can be performed.
+
+---
+
+## My recommendation
+
+This practical is sufficient for a **15-mark university exam** because it directly matches the marking scheme:
+
+* **10 Marks:** Illustrate the JAQL query structure using a JSON dataset (reading, displaying, projection, sorting).
+* **5 Marks:** Perform basic operations (filtering, grouping, aggregation).
+
+There is **no need to include Hadoop, HDFS, Hive, or advanced JAQL features** unless your syllabus or the examiner explicitly requires them. This keeps the practical concise, focused, and easy to execute during an exam.

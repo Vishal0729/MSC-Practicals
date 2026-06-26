@@ -1,0 +1,178 @@
+
+# Classification Model (Random Forest)
+
+## Python
+
+```python
+# ===== Step 1: Install/Load relevant packages (5 Marks) =====
+import pandas as pd
+import numpy as np
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import (accuracy_score, classification_report, 
+                             confusion_matrix, ConfusionMatrixDisplay)
+from sklearn.preprocessing import LabelEncoder
+import matplotlib.pyplot as plt
+
+# ===== Step 2: Load Dataset =====
+url = "https://raw.githubusercontent.com/mwaskom/seaborn-data/master/iris.csv"
+df = pd.read_csv(url)
+
+# --- If file is downloaded locally: ---
+# df = pd.read_csv("iris.csv")
+# ---------------------------------------
+
+print("Dataset: Iris")
+print(f"Shape: {df.shape}")
+print(f"Classes: {df['species'].unique().tolist()}")
+print(f"\nClass Distribution:")
+print(df['species'].value_counts())
+
+# Prepare data
+X = df.drop(columns=['species'])
+y = df['species']
+
+# Split
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42)
+print(f"\nTrain: {len(X_train)}, Test: {len(X_test)}")
+
+# ===== Step 3: Choose & Build Classifier (5 Marks) =====
+# Random Forest Classifier
+clf = RandomForestClassifier(n_estimators=100, max_depth=4, random_state=42)
+clf.fit(X_train, y_train)
+print("\nRandom Forest Classifier built!")
+print(f"  Trees: 100, Max Depth: 4")
+
+# Predictions
+y_pred = clf.predict(X_test)
+
+# ===== Step 4: Evaluate Performance (5 Marks) =====
+accuracy = accuracy_score(y_test, y_pred)
+print(f"\n{'='*50}")
+print(f"  MODEL EVALUATION")
+print(f"{'='*50}")
+print(f"  Accuracy: {accuracy * 100:.2f}%")
+
+print("\nClassification Report:")
+print(classification_report(y_test, y_pred))
+
+print("Confusion Matrix:")
+cm = confusion_matrix(y_test, y_pred)
+print(cm)
+
+# Feature Importance
+print("\nFeature Importance:")
+for name, imp in sorted(zip(X.columns, clf.feature_importances_), key=lambda x: x[1], reverse=True):
+    print(f"  {name:<20}: {imp:.4f}")
+
+# Plot Confusion Matrix
+disp = ConfusionMatrixDisplay(confusion_matrix=cm, display_labels=clf.classes_)
+disp.plot(cmap='Blues', values_format='d')
+plt.title(f"Random Forest - Confusion Matrix (Acc: {accuracy*100:.2f}%)")
+plt.tight_layout()
+plt.savefig("classification_cm.png")
+plt.show()
+```
+
+---
+
+## R
+
+```r
+# ===== Step 1: Install/Load relevant packages (5 Marks) =====
+library(randomForest)  # Random Forest classifier
+library(caret)         # Model evaluation
+
+# ===== Step 2: Load Dataset =====
+data(iris)
+
+# --- If file is downloaded from URL: ---
+# url <- "https://raw.githubusercontent.com/mwaskom/seaborn-data/master/iris.csv"
+# iris <- read.csv(url)
+# iris$species <- as.factor(iris$species)
+# ----------------------------------------
+
+cat("Dataset: Iris\n")
+cat(sprintf("Shape: %d rows, %d columns\n", nrow(iris), ncol(iris)))
+cat("Classes:", levels(iris$Species), "\n")
+cat("\nClass Distribution:\n")
+print(table(iris$Species))
+
+# Split
+set.seed(42)
+train_idx <- sample(1:nrow(iris), 0.7 * nrow(iris))
+train_data <- iris[train_idx, ]
+test_data <- iris[-train_idx, ]
+cat(sprintf("\nTrain: %d, Test: %d\n", nrow(train_data), nrow(test_data)))
+
+# ===== Step 3: Choose & Build Classifier (5 Marks) =====
+# Random Forest Classifier
+clf <- randomForest(Species ~ ., data = train_data, ntree = 100, maxnodes = 10)
+cat("\nRandom Forest Classifier built!\n")
+print(clf)
+
+# Predictions
+y_pred <- predict(clf, test_data)
+
+# ===== Step 4: Evaluate Performance (5 Marks) =====
+accuracy <- sum(y_pred == test_data$Species) / nrow(test_data)
+
+cat(sprintf("\n%s\n", strrep("=", 50)))
+cat("  MODEL EVALUATION\n")
+cat(sprintf("%s\n", strrep("=", 50)))
+cat(sprintf("  Accuracy: %.2f%%\n", accuracy * 100))
+
+cat("\nConfusion Matrix:\n")
+cm <- confusionMatrix(y_pred, test_data$Species)
+print(cm)
+
+cat("\nFeature Importance:\n")
+importance_df <- data.frame(
+  Feature = rownames(importance(clf)),
+  Importance = importance(clf)[, 1]
+)
+importance_df <- importance_df[order(-importance_df$Importance), ]
+print(importance_df)
+
+# Plot
+barplot(importance_df$Importance, names.arg = importance_df$Feature,
+        col = "steelblue", main = "Feature Importance - Random Forest",
+        ylab = "Importance", las = 2)
+```
+
+---
+
+## Expected Output
+
+```
+Dataset: Iris
+Shape: (150, 5)
+Classes: ['setosa', 'versicolor', 'virginica']
+
+Train: 105, Test: 45
+
+Random Forest Classifier built!
+  Trees: 100, Max Depth: 4
+
+==================================================
+  MODEL EVALUATION
+==================================================
+  Accuracy: 97.78%
+
+Classification Report:
+              precision    recall  f1-score   support
+      setosa       1.00      1.00      1.00        19
+  versicolor       1.00      0.92      0.96        13
+   virginica       0.93      1.00      0.96        13
+
+Confusion Matrix:
+[[19  0  0]
+ [ 0 12  1]
+ [ 0  0 13]]
+
+Feature Importance:
+  petal_length        : 0.4512
+  petal_width         : 0.4230
+  sepal_length        : 0.0789
+  sepal_width         : 0.0469
+```

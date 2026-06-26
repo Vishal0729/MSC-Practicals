@@ -1,0 +1,110 @@
+Experiment: Configure Hive and Perform Data Summarization & Querying
+Part A: Core Practical (Exam Oriented - 15 Marks)
+
+This is what you'll write in the practical exam. It contains only what the examiner expects.
+
+1. Aim
+
+
+2. Prerequisites
+Java
+Hadoop
+HDFS Running
+Hive Downloaded
+
+
+3. Environment Variables
+set HADOOP_HOME=C:\Users\<User>\tools\hadoop
+set HIVE_HOME=C:\Users\<User>\tools\hive
+set PATH=%HIVE_HOME%\bin;%HADOOP_HOME%\bin;%PATH%
+
+
+4. Configure hive-site.xml
+<configuration>
+<property>
+    <name>javax.jdo.option.ConnectionURL</name>
+    <value>jdbc:derby:;databaseName=metastore_db;create=true</value>
+</property>
+<property>
+    <name>hive.metastore.warehouse.dir</name>
+    <value>/user/hive/warehouse</value>
+</property>
+</configuration>
+
+
+5. Create Warehouse
+hdfs dfs -mkdir -p /user/hive/warehouse
+hdfs dfs -mkdir /tmp
+hdfs dfs -chmod 777 /tmp
+hdfs dfs -chmod 777 /user/hive/warehouse
+
+
+6. Initialize Hive
+schematool -dbType derby -initSchema
+hive
+
+
+7. Create Database
+CREATE DATABASE company;
+USE company;
+
+
+8. Create Table
+CREATE TABLE employee(
+id INT,
+name STRING,
+department STRING,
+salary INT
+)
+ROW FORMAT DELIMITED
+FIELDS TERMINATED BY ','
+STORED AS TEXTFILE;
+
+
+9. Sample CSV
+101,Alice,HR,35000
+102,Bob,IT,50000
+103,Charlie,Sales,45000
+104,David,IT,55000
+105,Eva,HR,40000
+
+
+10. Upload into HDFS
+hdfs dfs -mkdir /input
+hdfs dfs -put employee.csv /input
+
+
+11. Load into Hive
+LOAD DATA INPATH '/input/employee.csv'
+INTO TABLE employee;
+
+Data Summarization (10 Marks)
+SELECT COUNT(*) FROM employee;
+SELECT SUM(salary) FROM employee;
+SELECT AVG(salary) FROM employee;
+SELECT MAX(salary) FROM employee;
+SELECT MIN(salary) FROM employee;
+
+SELECT department,
+COUNT(*)
+FROM employee
+GROUP BY department;
+
+SELECT department,
+AVG(salary)
+FROM employee
+GROUP BY department;
+
+
+Data Querying (5 Marks)
+SELECT * FROM employee;
+SELECT * FROM employee WHERE department='IT';
+SELECT * FROM employee WHERE salary>40000;
+SELECT * FROM employee ORDER BY salary DESC;
+SELECT * FROM employee LIMIT 5;
+
+SELECT DISTINCT department FROM employee;
+
+SELECT * FROM employee WHERE salary BETWEEN 30000 AND 50000;
+
+SELECT * FROM employee WHERE name LIKE 'A%';

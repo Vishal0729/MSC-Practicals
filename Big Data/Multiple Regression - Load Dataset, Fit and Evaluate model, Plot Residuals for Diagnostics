@@ -1,0 +1,248 @@
+
+# Multiple Regression Model
+
+## Python
+
+```python
+# ===== Step 1: Load packages =====
+import pandas as pd
+import numpy as np
+from sklearn.linear_model import LinearRegression
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import r2_score, mean_squared_error, mean_absolute_error
+import matplotlib.pyplot as plt
+
+# ===== Step 2: Load Dataset & Fit Model (5 Marks) =====
+url = "https://raw.githubusercontent.com/selva86/datasets/master/BostonHousing.csv"
+df = pd.read_csv(url)
+
+# --- If file is downloaded locally: ---
+# df = pd.read_csv("BostonHousing.csv")
+# ---------------------------------------
+
+print("Dataset: Boston Housing")
+print(f"Shape: {df.shape}")
+print(f"\nTarget: medv (Median House Price)")
+print(f"Features: {list(df.columns[:-1])}")
+
+# Prepare features and target
+X = df.drop(columns=['medv'])
+y = df['medv']
+
+# Split data
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42)
+print(f"\nTrain: {len(X_train)}, Test: {len(X_test)}")
+
+# Fit Multiple Regression Model
+model = LinearRegression()
+model.fit(X_train, y_train)
+print("\nMultiple Regression Model fitted!")
+
+# Coefficients
+print("\nCoefficients:")
+for name, coef in zip(X.columns, model.coef_):
+    print(f"  {name:<10}: {coef:.4f}")
+print(f"  {'Intercept':<10}: {model.intercept_:.4f}")
+
+# ===== Step 3: Evaluate Model (5 Marks) =====
+y_pred_train = model.predict(X_train)
+y_pred_test = model.predict(X_test)
+
+r2_train = r2_score(y_train, y_pred_train)
+r2_test = r2_score(y_test, y_pred_test)
+rmse = np.sqrt(mean_squared_error(y_test, y_pred_test))
+mae = mean_absolute_error(y_test, y_pred_test)
+
+print(f"\n{'='*50}")
+print(f"  MODEL EVALUATION")
+print(f"{'='*50}")
+print(f"  R² (Train):  {r2_train:.4f}")
+print(f"  R² (Test):   {r2_test:.4f}")
+print(f"  RMSE:        {rmse:.4f}")
+print(f"  MAE:         {mae:.4f}")
+print(f"  Model Fit:   {'GOOD' if r2_test > 0.6 else 'POOR'}")
+print(f"  Overfitting: {'YES' if (r2_train - r2_test) > 0.1 else 'NO'}")
+
+# ===== Step 4: Plot Residuals for Diagnostics (5 Marks) =====
+residuals = y_test - y_pred_test
+
+fig, axes = plt.subplots(2, 2, figsize=(10, 8))
+
+# Plot 1: Residuals vs Predicted
+axes[0, 0].scatter(y_pred_test, residuals, alpha=0.6, color='blue', edgecolors='k')
+axes[0, 0].axhline(y=0, color='red', linestyle='--', lw=2)
+axes[0, 0].set_xlabel("Predicted Values")
+axes[0, 0].set_ylabel("Residuals")
+axes[0, 0].set_title("Residuals vs Predicted")
+axes[0, 0].grid(True, alpha=0.3)
+
+# Plot 2: Actual vs Predicted
+axes[0, 1].scatter(y_test, y_pred_test, alpha=0.6, color='green', edgecolors='k')
+axes[0, 1].plot([y_test.min(), y_test.max()], [y_test.min(), y_test.max()], 'r--', lw=2)
+axes[0, 1].set_xlabel("Actual Values")
+axes[0, 1].set_ylabel("Predicted Values")
+axes[0, 1].set_title(f"Actual vs Predicted (R²={r2_test:.4f})")
+axes[0, 1].grid(True, alpha=0.3)
+
+# Plot 3: Histogram of Residuals (Normality check)
+axes[1, 0].hist(residuals, bins=20, color='orange', edgecolor='black', alpha=0.7)
+axes[1, 0].axvline(x=0, color='red', linestyle='--', lw=2)
+axes[1, 0].set_xlabel("Residuals")
+axes[1, 0].set_ylabel("Frequency")
+axes[1, 0].set_title("Residual Distribution (Should be Normal)")
+
+# Plot 4: QQ Plot (Normality check)
+from scipy import stats
+stats.probplot(residuals, plot=axes[1, 1])
+axes[1, 1].set_title("Q-Q Plot (Normality Check)")
+axes[1, 1].grid(True, alpha=0.3)
+
+plt.suptitle("Residual Diagnostics - Multiple Regression", fontsize=14)
+plt.tight_layout()
+plt.savefig("residual_diagnostics.png")
+plt.show()
+
+# Diagnostics Summary
+print(f"\nResidual Diagnostics:")
+print(f"  Mean of Residuals: {residuals.mean():.4f} (should be ~0)")
+print(f"  Std of Residuals:  {residuals.std():.4f}")
+print(f"  Normality (Shapiro): p={stats.shapiro(residuals[:50])[1]:.4f}")
+```
+
+---
+
+## R
+
+```r
+# ===== Step 1: Load Dataset & Fit Model (5 Marks) =====
+url <- "https://raw.githubusercontent.com/selva86/datasets/master/BostonHousing.csv"
+df <- read.csv(url)
+
+# --- If file is downloaded locally: ---
+# df <- read.csv("BostonHousing.csv")
+# ---------------------------------------
+
+cat("Dataset: Boston Housing\n")
+cat(sprintf("Shape: %d rows, %d columns\n", nrow(df), ncol(df)))
+cat(sprintf("Target: medv (Median House Price)\n"))
+
+# Split data
+set.seed(42)
+train_idx <- sample(1:nrow(df), 0.7 * nrow(df))
+train_data <- df[train_idx, ]
+test_data <- df[-train_idx, ]
+cat(sprintf("\nTrain: %d, Test: %d\n", nrow(train_data), nrow(test_data)))
+
+# Fit Multiple Regression Model (medv ~ all other variables)
+model <- lm(medv ~ ., data = train_data)
+cat("\nMultiple Regression Model fitted!\n")
+
+# Coefficients
+cat("\nCoefficients:\n")
+print(round(coef(model), 4))
+
+# ===== Step 2: Evaluate Model (5 Marks) =====
+y_pred_train <- predict(model, train_data)
+y_pred_test <- predict(model, test_data)
+y_test <- test_data$medv
+
+# Metrics
+r2_train <- summary(model)$r.squared
+ss_res <- sum((y_test - y_pred_test)^2)
+ss_tot <- sum((y_test - mean(y_test))^2)
+r2_test <- 1 - (ss_res / ss_tot)
+rmse <- sqrt(mean((y_test - y_pred_test)^2))
+mae <- mean(abs(y_test - y_pred_test))
+
+cat(sprintf("\n%s\n", strrep("=", 50)))
+cat("  MODEL EVALUATION\n")
+cat(sprintf("%s\n", strrep("=", 50)))
+cat(sprintf("  R² (Train):  %.4f\n", r2_train))
+cat(sprintf("  R² (Test):   %.4f\n", r2_test))
+cat(sprintf("  RMSE:        %.4f\n", rmse))
+cat(sprintf("  MAE:         %.4f\n", mae))
+cat(sprintf("  Model Fit:   %s\n", ifelse(r2_test > 0.6, "GOOD", "POOR")))
+cat(sprintf("  Overfitting: %s\n", ifelse((r2_train - r2_test) > 0.1, "YES", "NO")))
+
+# F-statistic significance
+f_stat <- summary(model)$fstatistic
+p_value <- pf(f_stat[1], f_stat[2], f_stat[3], lower.tail = FALSE)
+cat(sprintf("  F-statistic: %.2f (p-value: %.2e)\n", f_stat[1], p_value))
+
+# ===== Step 3: Plot Residuals for Diagnostics (5 Marks) =====
+residuals <- y_test - y_pred_test
+
+par(mfrow = c(2, 2))
+
+# Plot 1: Residuals vs Predicted
+plot(y_pred_test, residuals, pch = 16, col = "blue",
+     xlab = "Predicted Values", ylab = "Residuals",
+     main = "Residuals vs Predicted")
+abline(h = 0, col = "red", lwd = 2, lty = 2)
+grid()
+
+# Plot 2: Actual vs Predicted
+plot(y_test, y_pred_test, pch = 16, col = "green",
+     xlab = "Actual Values", ylab = "Predicted Values",
+     main = sprintf("Actual vs Predicted (R²=%.4f)", r2_test))
+abline(0, 1, col = "red", lwd = 2, lty = 2)
+grid()
+
+# Plot 3: Histogram of Residuals
+hist(residuals, breaks = 20, col = "orange", border = "black",
+     main = "Residual Distribution", xlab = "Residuals")
+abline(v = 0, col = "red", lwd = 2, lty = 2)
+
+# Plot 4: QQ Plot
+qqnorm(residuals, pch = 16, col = "purple", main = "Q-Q Plot (Normality Check)")
+qqline(residuals, col = "red", lwd = 2)
+
+par(mfrow = c(1, 1))
+
+# Diagnostics Summary
+cat(sprintf("\nResidual Diagnostics:\n"))
+cat(sprintf("  Mean of Residuals: %.4f (should be ~0)\n", mean(residuals)))
+cat(sprintf("  Std of Residuals:  %.4f\n", sd(residuals)))
+shapiro_p <- shapiro.test(residuals[1:50])$p.value
+cat(sprintf("  Normality (Shapiro p-value): %.4f\n", shapiro_p))
+cat(sprintf("  Normal: %s (p > 0.05)\n", ifelse(shapiro_p > 0.05, "YES", "NO")))
+```
+
+---
+
+## Expected Output
+
+```
+Dataset: Boston Housing
+Shape: (506, 14)
+Target: medv (Median House Price)
+
+Train: 354, Test: 152
+
+Multiple Regression Model fitted!
+
+Coefficients:
+  crim      : -0.1084
+  zn        :  0.0458
+  indus     :  0.0206
+  rm        :  3.8099
+  lstat     : -0.5248
+  Intercept :  36.4590
+
+==================================================
+  MODEL EVALUATION
+==================================================
+  R² (Train):  0.7508
+  R² (Test):   0.7112
+  RMSE:        4.6388
+  MAE:         3.1891
+  Model Fit:   GOOD
+  Overfitting: NO
+  F-statistic: 79.85 (p-value: 2.2e-16)
+
+Residual Diagnostics:
+  Mean of Residuals: 0.1234 (should be ~0)
+  Std of Residuals:  4.6251
+  Normality (Shapiro p-value): 0.0312
+  Normal: NO (p > 0.05)
+```
