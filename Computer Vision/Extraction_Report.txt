@@ -1,0 +1,21 @@
+CV Vembu.pdf extraction report
+
+Added unique scripts:
+- Practical_01_Point_Geometric_Transformation.py
+- Practical_05_TensorFlow_Object_Detection.py
+- Practical_06_Haar_Pedestrian_Detection.py
+- Practical_07_RANSAC_Line_Fitting.py
+- Practical_08_Image_Colorization.py
+- Practical_09A_Image_Matting.py
+- Practical_09B_Image_Compositing.py
+
+Ignored as already covered by previous extraction:
+- Practical no 2: Perform Image Stitching
+- Practical no 3: Camera calibration
+- Practical no 4: Face detection
+
+Notes:
+- The PDF repeats matting/compositing code and then includes a separate alpha-matting snippet. These were separated into Practical 09A for alpha matting and Practical 09B for compositing.
+- The TensorFlow object detection practical requires the frozen graph and label-map files to be placed next to the script as documented in that file.
+- External Python execution is blocked in this Codex sandbox, so verification here used static checks and logic review rather than running python -m py_compile.
+
