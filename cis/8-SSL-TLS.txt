@@ -1,0 +1,41 @@
+# Step 1: Install OpenSSL
+sudo dnf install openssl
+
+# Step 2: Generate Private Key
+openssl genrsa -out server.key 2048
+
+# Step 3: Create CSR
+openssl req -new -key server.key -out server.csr
+
+# Step 4: Create Self-Signed Certificate
+openssl x509 -req -days 365 -in server.csr -signkey server.key -out server.crt
+
+# Step 5: Move Certificate and Key
+sudo cp server.crt /etc/pki/tls/certs/
+sudo cp server.key /etc/pki/tls/private/
+
+# Step 6: Configure Apache SSL
+# Replace the existing SSL configuration with:
+# SSLEngine on
+# SSLCertificateFile /etc/pki/tls/certs/server.crt
+# SSLCertificateKeyFile /etc/pki/tls/private/server.key
+
+# Step 8: Check Apache Configuration
+sudo httpd -t
+
+# Step 9: Check Apache Status
+sudo systemctl status httpd
+
+# Step 10: Allow HTTPS in Firewall
+sudo firewall-cmd --permanent --add-service=https
+sudo firewall-cmd --reload
+sudo firewall-cmd --list-services
+
+# Step 11: Test HTTPS / SSL-TLS
+# Open in browser:
+# https://tyit-rhel8
+# https://192.168.174.178
+# Click Advanced -> Proceed (if security warning appears)
+
+# On Terminal: Check HTTPS Port
+sudo ss -tnp | grep 443
