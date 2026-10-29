@@ -1,0 +1,36 @@
+sudo systemctl start firewalld
+sudo firewall-cmd --permanent --add-service=ssh
+sudo firewall-cmd --permanent --add-service=http
+sudo firewall-cmd --permanent --add-service=https
+sudo firewall-cmd --reload
+sudo firewall-cmd --list-all
+
+ipconfig
+
+->putty configuration..192.168.174.178..port22..SSH
+
+ls
+
+sudo systemctl start httpd
+sudo systemctl status httpd
+
+->Open Website..Red Hat Enterprise Linux Test Page 
+
+sudo firewall-cmd --permanent --remove-service=http
+sudo firewall-cmd --permanent --remove-service=https
+sudo firewall-cmd --reload
+
+->In chrome..192.168.174.178
+
+sudo firewall-cmd --permanent --remove-service=http
+sudo firewall-cmd --permanent --remove-service=https
+sudo firewall-cmd --reload
+sudo firewall-cmd --permanent --remove-service=ssh
+sudo firewall-cmd --reload
+
+->open putty..shows network error
+
+
+
+
+
