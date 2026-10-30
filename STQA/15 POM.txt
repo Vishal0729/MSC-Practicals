@@ -1,0 +1,57 @@
+package pom;
+import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.chrome.ChromeDriver;
+import org.testng.annotations.Test;
+
+public class LoginTest1 {
+
+    @Test
+    public void loginTest() {
+
+        System.setProperty("webdriver.chrome.driver",
+        "C:\\Users\\student\\Desktop\\Screenshot Capture and Logging Mechanism\\chromedriver\\chromedriver.exe");
+
+        WebDriver driver = new ChromeDriver();
+
+        driver.get("https://practicetestautomation.com/practice-test-login/");
+
+        LoginPage1 page = new LoginPage1(driver);
+
+        page.enterUsername("student");
+        page.enterPassword("Password123");
+        page.clickLogin();
+
+        driver.quit();
+    }
+}
+
+package pom;
+
+import org.openqa.selenium.By;
+import org.openqa.selenium.WebDriver;
+
+public class LoginPage1 {
+
+    WebDriver driver;
+
+    By username = By.id("username");
+    By password = By.id("password");
+    By login = By.id("submit");
+
+    public LoginPage1(WebDriver driver) {
+        this.driver = driver;
+    }
+
+    public void enterUsername(String user) {
+        driver.findElement(username).sendKeys(user);
+    }
+
+    public void enterPassword(String pass) {
+        driver.findElement(password).sendKeys(pass);
+    }
+
+    public void clickLogin() {
+        driver.findElement(login).click();
+    }
+}
+

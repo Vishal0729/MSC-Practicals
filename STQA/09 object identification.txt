@@ -1,0 +1,42 @@
+<dependencies>
+
+        <!-- Selenium Java -->
+        <dependency>
+            <groupId>org.seleniumhq.selenium</groupId>
+            <artifactId>selenium-java</artifactId>
+            <version>4.34.0</version>
+        </dependency>
+
+        <!-- WebDriverManager -->
+        <dependency>
+            <groupId>io.github.bonigarcia</groupId>
+            <artifactId>webdrivermanager</artifactId>
+            <version>6.1.0</version>
+        </dependency>
+
+</dependencies>
+
+
+import org.openqa.selenium.*;
+import org.openqa.selenium.chrome.ChromeDriver;
+
+public class COUNT {
+    public static void main(String[] args) {
+
+        WebDriver driver = new ChromeDriver();
+        driver.get("https://www.amazon.com");
+
+        int links = driver.findElements(By.tagName("a")).size();
+        int images = driver.findElements(By.tagName("img")).size();
+        int buttons = driver.findElements(By.tagName("button")).size();
+        int inputs = driver.findElements(By.tagName("input")).size();
+
+        System.out.println("Links   : " + links);
+        System.out.println("Images  : " + images);
+        System.out.println("Buttons : " + buttons);
+        System.out.println("Inputs  : " + inputs);
+        System.out.println("Total   : " + (links + images + buttons + inputs));
+
+        driver.quit();
+    }
+}

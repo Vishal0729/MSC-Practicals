@@ -1,0 +1,54 @@
+log4j.rootLogger=INFO, FILE
+log4j.appender.FILE=org.apache.log4j.FileAppender
+log4j.appender.FILE.File=logs/test.log
+log4j.appender.FILE.layout=org.apache.log4j.PatternLayout
+log4j.appender.FILE.layout.ConversionPattern=%d %-5p - %m%n
+
+
+import java.io.File;
+import org.apache.commons.io.FileUtils;
+import org.apache.log4j.*;
+import org.openqa.selenium.*;
+import org.openqa.selenium.chrome.ChromeDriver;
+
+public class ScreenshotLoggingTest {
+	
+    static Logger log = Logger.getLogger(ScreenshotLoggingTest.class);
+
+    public static void main(String[] args) throws Exception {
+
+        PropertyConfigurator.configure("src/log4j.properties");
+
+        System.setProperty("webdriver.chrome.driver",
+            "C:\\Users\\student\\Desktop\\dataextractionjar\\chromedriver\\chromedriver.exe");
+
+        WebDriver driver = new ChromeDriver();
+
+        try {
+            log.info("Browser started");
+            driver.get("https://www.google.com");
+
+            if (driver.getTitle().contains("Google")) {
+                log.info("Test Passed");
+                System.out.println("TEST PASSED");
+            } else {
+                throw new Exception("Test Failed");
+            }
+
+        } catch (Exception e) {
+
+            log.error(e.getMessage());
+
+            File src = ((TakesScreenshot) driver)
+                    .getScreenshotAs(OutputType.FILE);
+
+            FileUtils.copyFile(src,
+                    new File("screenshots/failure.png"));
+
+            System.out.println("Screenshot Captured");
+        }
+
+        driver.quit();
+    }
+}
+

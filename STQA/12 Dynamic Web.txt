@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html>
+<body>
+
+<h2>Student Table</h2>
+
+<button id="loadData" onclick="load()">Load Data</button>
+<button id="sortMarks" onclick="sort()">Sort Marks</button>
+
+<select id="courseFilter" onchange="filter()">
+    <option>All</option>
+    <option>Java</option>
+    <option>Selenium</option>
+    <option>Python</option>
+</select>
+
+<table id="studentTable" border="1">
+<tr>
+    <th>Name</th><th>Marks</th><th>Course</th>
+</tr>
+<tbody id="data"></tbody>
+</table>
+
+<script>
+
+let students = [
+["Rahul",85,"Java"],
+["Amit",65,"Selenium"],
+["Priya",92,"Java"],
+["Neha",70,"Python"]
+];
+
+function show(x) {
+    data.innerHTML = "";
+    x.forEach(s =>
+        data.innerHTML +=
+        `<tr><td>${s[0]}</td><td>${s[1]}</td><td>${s[2]}</td></tr>`
+    );
+}
+
+function load() {
+    show(students);
+}
+
+function sort() {
+    students.sort((a,b) => a[1]-b[1]);
+    show(students);
+}
+
+function filter() {
+    let c = courseFilter.value;
+    show(c=="All" ? students : students.filter(s=>s[2]==c));
+}
+
+</script>
+
+</body>
+</html>
+
+
+package student;
+
+import java.util.List;
+import org.openqa.selenium.*;
+import org.openqa.selenium.chrome.ChromeDriver;
+import org.openqa.selenium.support.ui.Select;
+
+public class DynamicTable {
+
+    public static void main(String[] args) {
+
+        System.setProperty("webdriver.chrome.driver",
+                "C:\\Users\\student\\Desktop\\dataextractionjar\\chromedriver\\chromedriver.exe");
+
+        WebDriver driver = new ChromeDriver();
+        driver.manage().window().maximize();
+
+        driver.get("file:///C:\\Users\\student\\eclipse-workspace\\Dynamic\\student_table.html");
+
+        // Load data
+        driver.findElement(By.id("loadData")).click();
+
+        List<WebElement> rows = driver.findElements(
+                By.xpath("//table[@id='studentTable']/tbody/tr"));
+
+        System.out.println("Total Students: " + rows.size());
+
+        // Extract data
+        for(WebElement r : rows)
+            System.out.println(r.getText());
+
+        // Sort
+        driver.findElement(By.id("sortMarks")).click();
+
+        // Filter Java
+        new Select(driver.findElement(By.id("courseFilter")))
+                .selectByVisibleText("Java");
+
+        rows = driver.findElements(
+                By.xpath("//table[@id='studentTable']/tbody/tr"));
+
+        System.out.println("Java Students:");
+        for(WebElement r : rows)
+            System.out.println(r.getText());
+
+        driver.quit();
+    }
+}
+

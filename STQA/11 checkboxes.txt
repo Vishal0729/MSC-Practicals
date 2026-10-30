@@ -1,0 +1,66 @@
+
+<h2>Student Skills</h2>
+<!DOCTYPE html>
+<html>
+<body>
+
+<input type="checkbox" checked> Java<br>
+<input type="checkbox"> Selenium<br>
+<input type="checkbox" checked> HTML<br>
+<input type="checkbox"> CSS<br>
+<input type="checkbox"> Python<br>
+
+</body>
+</html>
+
+
+
+
+import java.util.List;
+import org.openqa.selenium.By;
+import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.WebElement;
+import org.openqa.selenium.chrome.ChromeDriver;
+
+public class CheckboxTest {
+
+    public static void main(String[] args) {
+
+        System.setProperty("webdriver.chrome.driver",
+            "C:\\Users\\student\\Desktop\\dataextractionjar\\chromedriver\\chromedriver.exe");
+
+        WebDriver driver = new ChromeDriver();
+
+        driver.manage().window().maximize();
+
+        driver.get("file:///C:\\Users\\student\\eclipse-workspace\\CheckboxProject\\checkbox.html");
+
+        List<WebElement> boxes =
+            driver.findElements(By.cssSelector("input[type='checkbox']"));
+
+        int checked = 0;
+        int unchecked = 0;
+
+        System.out.println("Total: " + boxes.size());
+
+        for (WebElement box : boxes) {
+
+            if (box.isSelected())
+                checked++;
+            else
+                unchecked++;
+        }
+
+        System.out.println("Checked: " + checked);
+        System.out.println("Unchecked: " + unchecked);
+
+        boxes.get(1).click();
+
+        if (boxes.get(1).isSelected())
+            System.out.println("Checkbox selected successfully");
+
+        driver.quit();
+    }
+}
+
+

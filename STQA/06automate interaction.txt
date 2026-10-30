@@ -1,0 +1,128 @@
+<dependencies>
+
+    <dependency>
+        <groupId>org.seleniumhq.selenium</groupId>
+        <artifactId>selenium-java</artifactId>
+        <version>4.21.0</version>
+    </dependency>
+
+    <dependency>
+        <groupId>org.testng</groupId>
+        <artifactId>testng</artifactId>
+        <version>7.10.2</version>
+        <scope>test</scope>
+    </dependency>
+
+</dependencies>
+
+import java.time.Duration;
+
+import org.openqa.selenium.Alert;
+import org.openqa.selenium.By;
+import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.WebElement;
+import org.openqa.selenium.chrome.ChromeDriver;
+import org.openqa.selenium.support.ui.ExpectedConditions;
+import org.openqa.selenium.support.ui.Select;
+import org.openqa.selenium.support.ui.WebDriverWait;
+import org.testng.annotations.AfterMethod;
+import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.Test;
+
+public class kl {
+
+    WebDriver driver;
+    WebDriverWait wait;
+
+    @BeforeMethod
+    public void setup() {
+
+        driver = new ChromeDriver();
+
+        driver.manage().window().maximize();
+
+        // Implicit Wait
+        driver.manage().timeouts().implicitlyWait(Duration.ofSeconds(10));
+
+        // Explicit Wait
+        wait = new WebDriverWait(driver, Duration.ofSeconds(10));
+    }
+
+    // Textbox + Radio Button + Checkbox
+    @Test(priority = 1)
+    public void formTest() {
+
+        driver.get("https://demoqa.com/automation-practice-form");
+
+        // Textbox
+        driver.findElement(By.id("firstName")).sendKeys("Kiran");
+        driver.findElement(By.id("lastName")).sendKeys("Patel");
+
+        // Radio Button
+        driver.findElement(By.xpath("//label[text()='Male']")).click();
+
+        // Checkbox
+        driver.findElement(By.xpath("//label[text()='Sports']")).click();
+
+        // Explicit Wait
+        wait.until(ExpectedConditions.elementToBeClickable(By.id("submit")));
+
+        System.out.println("Textbox, Radio Button and Checkbox executed successfully.");
+    }
+
+    // Dropdown
+    @Test(priority = 2)
+    public void dropdownTest() {
+
+        driver.get("https://the-internet.herokuapp.com/dropdown");
+
+        WebElement dropdown = driver.findElement(By.id("dropdown"));
+
+        Select select = new Select(dropdown);
+
+        select.selectByVisibleText("Option 1");
+
+        System.out.println("Dropdown Selected Successfully.");
+    }
+
+    // Alert
+    @Test(priority = 3)
+    public void alertTest() {
+
+        driver.get("https://demoqa.com/alerts");
+
+        driver.findElement(By.id("alertButton")).click();
+
+        wait.until(ExpectedConditions.alertIsPresent());
+
+        Alert alert = driver.switchTo().alert();
+
+        System.out.println("Alert Text : " + alert.getText());
+
+        alert.accept();
+
+        System.out.println("Alert Accepted Successfully.");
+    }
+
+    // Frame
+    @Test(priority = 4)
+    public void frameTest() {
+
+        driver.get("https://demoqa.com/frames");
+
+        driver.switchTo().frame("frame1");
+
+        String text = driver.findElement(By.id("sampleHeading")).getText();
+
+        System.out.println("Frame Text : " + text);
+
+        driver.switchTo().defaultContent();
+
+        System.out.println("Frame Executed Successfully.");
+    }
+
+    @AfterMethod
+    public void tearDown() {
+
+        driver.quit();
+    }

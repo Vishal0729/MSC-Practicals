@@ -1,0 +1,653 @@
+<!DOCTYPE html>
+<html>
+<head>
+
+    <title>Student Course Table</title>
+
+    <style>
+
+        body {
+            font-family: Arial;
+            margin: 40px;
+        }
+
+        h1 {
+            text-align: center;
+        }
+
+        table {
+            width: 80%;
+            margin: 30px auto;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            border: 1px solid black;
+            padding: 12px;
+            text-align: center;
+        }
+
+        th {
+            background-color: lightgray;
+        }
+
+        tr:hover {
+            background-color: #f2f2f2;
+        }
+
+    </style>
+
+</head>
+
+<body>
+
+<h1>Student Details</h1>
+
+<table id="studentTable">
+
+    <thead>
+
+        <tr>
+            <th>ID</th>
+            <th>Name</th>
+            <th>Age</th>
+            <th>Course</th>
+        </tr>
+
+    </thead>
+
+    <tbody>
+
+        <tr>
+            <td>101</td>
+            <td>Rahul</td>
+            <td>20</td>
+            <td>Java</td>
+        </tr>
+
+        <tr>
+            <td>102</td>
+            <td>Priya</td>
+            <td>21</td>
+            <td>Python</td>
+        </tr>
+
+        <tr>
+            <td>103</td>
+            <td>Amit</td>
+            <td>20</td>
+            <td>Selenium</td>
+        </tr>
+
+        <tr>
+            <td>104</td>
+            <td>Neha</td>
+            <td>22</td>
+            <td>Java</td>
+        </tr>
+
+        <tr>
+            <td>105</td>
+            <td>Ravi</td>
+            <td>21</td>
+            <td>Python</td>
+        </tr>
+
+        <tr>
+            <td>106</td>
+            <td>Anu</td>
+            <td>20</td>
+            <td>Testing</td>
+        </tr>
+
+        <tr>
+            <td>107</td>
+            <td>Kiran</td>
+            <td>22</td>
+            <td>Java</td>
+        </tr>
+
+        <tr>
+            <td>108</td>
+            <td>Sneha</td>
+            <td>21</td>
+            <td>Selenium</td>
+        </tr>
+
+        <tr>
+            <td>109</td>
+            <td>Arjun</td>
+            <td>20</td>
+            <td>Python</td>
+        </tr>
+
+        <tr>
+            <td>110</td>
+            <td>Pooja</td>
+            <td>22</td>
+            <td>Testing</td>
+        </tr>
+
+    </tbody>
+
+</table>
+
+</body>
+</html>
+
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.util.List;
+
+import org.apache.poi.xssf.usermodel.XSSFCell;
+import org.apache.poi.xssf.usermodel.XSSFRow;
+import org.apache.poi.xssf.usermodel.XSSFSheet;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+
+import org.openqa.selenium.By;
+import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.WebElement;
+import org.openqa.selenium.chrome.ChromeDriver;
+
+public class l {
+
+    public static void main(String[] args) throws Exception {
+
+        // =====================================================
+        // 1. Excel File Path
+        // =====================================================
+
+        String excelPath =
+                "C:\\Users\\student\\eclipse-workspace\\Exce\\StudentData Result.xlsx";
+
+
+        // =====================================================
+        // 2. ChromeDriver Path
+        // =====================================================
+
+        System.setProperty(
+                "webdriver.chrome.driver",
+                "C:\\Users\\student\\Downloads\\dataextractionjar\\chromedriver\\chromedriver.exe"
+        );
+
+
+        // =====================================================
+        // 3. Open Excel File
+        // =====================================================
+
+        FileInputStream fis =
+                new FileInputStream(excelPath);
+
+        XSSFWorkbook workbook =
+                new XSSFWorkbook(fis);
+
+
+        // =====================================================
+        // 4. Get First Excel Sheet
+        // =====================================================
+
+        XSSFSheet sheet =
+                workbook.getSheetAt(0);
+
+        System.out.println(
+                "Excel Sheet Name = "
+                        + workbook.getSheetName(0)
+        );
+
+
+        // =====================================================
+        // 5. Launch Chrome
+        // =====================================================
+
+        WebDriver driver =
+                new ChromeDriver();
+
+        driver.manage().window().maximize();
+
+
+        // =====================================================
+        // 6. Open HTML Table
+        // =====================================================
+
+        driver.get(
+                "file:///C:/Users/student/eclipse-workspace/Exce/student.html"
+        );
+
+
+        // =====================================================
+        // 7. Find HTML Table Rows
+        // =====================================================
+
+        List<WebElement> rows =
+                driver.findElements(
+                        By.xpath(
+                                "//table[@id='studentTable']/tbody/tr"
+                        )
+                );
+
+
+        System.out.println(
+                "Total Web Table Rows = "
+                        + rows.size()
+        );
+
+
+        // =====================================================
+        // 8. Check that 10 rows exist
+        // =====================================================
+
+        if (rows.size() != 10) {
+
+            System.out.println(
+                    "ERROR: Expected 10 rows but found "
+                            + rows.size()
+            );
+
+            driver.quit();
+            fis.close();
+            workbook.close();
+
+            return;
+        }
+
+
+        // =====================================================
+        // 9. Read 10 Excel Records
+        // =====================================================
+
+        for (int i = 1; i <= 10; i++) {
+
+            System.out.println(
+                    "\n================================"
+            );
+
+            System.out.println(
+                    "Processing Student "
+                            + i
+            );
+
+            System.out.println(
+                    "================================"
+            );
+
+
+            // =================================================
+            // Get Excel Row
+            // =================================================
+
+            XSSFRow excelRow =
+                    sheet.getRow(i);
+
+
+            // =================================================
+            // Check Excel Row
+            // =================================================
+
+            if (excelRow == null) {
+
+                System.out.println(
+                        "Excel row not found: "
+                                + i
+                );
+
+                continue;
+            }
+
+
+            // =================================================
+            // Read ID
+            // =================================================
+
+            String excelID =
+                    getCellValue(
+                            excelRow.getCell(0)
+                    );
+
+
+            // =================================================
+            // Read Name
+            // =================================================
+
+            String excelName =
+                    getCellValue(
+                            excelRow.getCell(1)
+                    );
+
+
+            // =================================================
+            // Read Age
+            // =================================================
+
+            String excelAge =
+                    getCellValue(
+                            excelRow.getCell(2)
+                    );
+
+
+            // =================================================
+            // Read Course
+            // =================================================
+
+            String excelCourse =
+                    getCellValue(
+                            excelRow.getCell(3)
+                    );
+
+
+            // =================================================
+            // Print Excel Data
+            // =================================================
+
+            System.out.println(
+                    "Excel ID     : "
+                            + excelID
+            );
+
+            System.out.println(
+                    "Excel Name   : "
+                            + excelName
+            );
+
+            System.out.println(
+                    "Excel Age    : "
+                            + excelAge
+            );
+
+            System.out.println(
+                    "Excel Course : "
+                            + excelCourse
+            );
+
+
+            // =================================================
+            // Find Student Row in HTML Table
+            // =================================================
+
+            String xpath =
+                    "//table[@id='studentTable']"
+                    + "/tbody/tr[td[1]='"
+                    + excelID
+                    + "']";
+
+
+            WebElement webRow =
+                    driver.findElement(
+                            By.xpath(xpath)
+                    );
+
+
+            // =================================================
+            // Get Web Table Cells
+            // =================================================
+
+            List<WebElement> cells =
+                    webRow.findElements(
+                            By.tagName("td")
+                    );
+
+
+            // =================================================
+            // Check Cells
+            // =================================================
+
+            if (cells.size() < 4) {
+
+                System.out.println(
+                        "ERROR: Student row does not "
+                                + "contain 4 cells."
+                );
+
+                continue;
+            }
+
+
+            // =================================================
+            // Read Web ID
+            // =================================================
+
+            String webID =
+                    cells.get(0).getText();
+
+
+            // =================================================
+            // Read Web Name
+            // =================================================
+
+            String webName =
+                    cells.get(1).getText();
+
+
+            // =================================================
+            // Read Web Age
+            // =================================================
+
+            String webAge =
+                    cells.get(2).getText();
+
+
+            // =================================================
+            // Read Web Course
+            // =================================================
+
+            String webCourse =
+                    cells.get(3).getText();
+
+
+            // =================================================
+            // Print Web Data
+            // =================================================
+
+            System.out.println(
+                    "Web ID       : "
+                            + webID
+            );
+
+            System.out.println(
+                    "Web Name     : "
+                            + webName
+            );
+
+            System.out.println(
+                    "Web Age      : "
+                            + webAge
+            );
+
+            System.out.println(
+                    "Web Course   : "
+                            + webCourse
+            );
+
+
+            // =================================================
+            // Compare Excel and Web Data
+            // =================================================
+
+            boolean idMatch =
+                    excelID.equals(webID);
+
+            boolean nameMatch =
+                    excelName.equals(webName);
+
+            boolean ageMatch =
+                    excelAge.equals(webAge);
+
+            boolean courseMatch =
+                    excelCourse.equals(webCourse);
+
+
+            // =================================================
+            // Print Individual Verification
+            // =================================================
+
+            System.out.println(
+                    "ID Match     : "
+                            + idMatch
+            );
+
+            System.out.println(
+                    "Name Match   : "
+                            + nameMatch
+            );
+
+            System.out.println(
+                    "Age Match    : "
+                            + ageMatch
+            );
+
+            System.out.println(
+                    "Course Match : "
+                            + courseMatch
+            );
+
+
+            // =================================================
+            // Result Cell
+            // Excel Column 4 = Result
+            // =================================================
+
+            XSSFCell resultCell =
+                    excelRow.getCell(4);
+
+
+            if (resultCell == null) {
+
+                resultCell =
+                        excelRow.createCell(4);
+            }
+
+
+            // =================================================
+            // PASS / FAIL
+            // =================================================
+
+            if (idMatch
+                    && nameMatch
+                    && ageMatch
+                    && courseMatch) {
+
+                resultCell.setCellValue(
+                        "PASS"
+                );
+
+                System.out.println(
+                        "RESULT = PASS"
+                );
+
+            } else {
+
+                resultCell.setCellValue(
+                        "FAIL"
+                );
+
+                System.out.println(
+                        "RESULT = FAIL"
+                );
+            }
+        }
+
+
+        // =====================================================
+        // 10. Close Input Stream
+        // =====================================================
+
+        fis.close();
+
+
+        // =====================================================
+        // 11. Save Updated Excel File
+        // =====================================================
+
+        FileOutputStream fos =
+                new FileOutputStream(excelPath);
+
+        workbook.write(fos);
+
+        fos.close();
+
+        workbook.close();
+
+
+        // =====================================================
+        // 12. Close Browser
+        // =====================================================
+
+        driver.quit();
+
+
+        // =====================================================
+        // 13. Final Message
+        // =====================================================
+
+        System.out.println(
+                "\n================================"
+        );
+
+        System.out.println(
+                "TEST COMPLETED SUCCESSFULLY"
+        );
+
+        System.out.println(
+                "================================"
+        );
+    }
+
+
+    // =========================================================
+    // Method: Read Excel Cell Value
+    // =========================================================
+
+    public static String getCellValue(
+            XSSFCell cell) {
+
+        if (cell == null) {
+
+            return "";
+        }
+
+
+        switch (cell.getCellType()) {
+
+            case STRING:
+
+                return cell.getStringCellValue();
+
+
+            case NUMERIC:
+
+                double value =
+                        cell.getNumericCellValue();
+
+
+                if (value == (long) value) {
+
+                    return String.valueOf(
+                            (long) value
+                    );
+
+                } else {
+
+                    return String.valueOf(
+                            value
+                    );
+                }
+
+
+            case BOOLEAN:
+
+                return String.valueOf(
+                        cell.getBooleanCellValue()
+                );
+
+
+            case FORMULA:
+
+                return cell.getCellFormula();
+
+
+            default:
+
+                return "";
+        }
+    }
+}
+

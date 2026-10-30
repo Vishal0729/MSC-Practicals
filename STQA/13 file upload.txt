@@ -1,0 +1,65 @@
+<html>
+<body>
+
+<h2>File Upload</h2>
+
+<input type="file" id="file">
+
+<br><br>
+
+<button onclick="alert('File Uploaded Successfully')">
+Upload
+</button>
+
+<br><br>
+
+<a href="test.txt" download>Download File</a>
+
+</body>
+</html>
+
+import java.awt.Robot;
+import java.awt.event.KeyEvent;
+import java.io.File;
+import org.openqa.selenium.*;
+import org.openqa.selenium.chrome.ChromeDriver;
+
+public class FileUploadDownload {
+ public static void main(String[] args) throws Exception {
+
+  System.setProperty("webdriver.chrome.driver",
+   "C:\\Users\\student\\Desktop\\dataextractionjar\\chromedriver\\chromedriver.exe");
+
+  WebDriver d = new ChromeDriver();
+  d.manage().window().maximize();
+  d.get("file:///C:\\Users\\student\\eclipse-workspace\\Practical3\\file.html");
+
+  // Upload
+  d.findElement(By.id("file")).sendKeys(
+   "C:\\Users\\student\\eclipse-workspace\\Practical3\\upload.txt");
+
+  d.findElement(By.tagName("button")).click();
+
+  // Handle Alert
+  Alert a = d.switchTo().alert();
+  System.out.println(a.getText());
+  a.accept();
+
+  // Download
+  d.findElement(By.linkText("Download File")).click();
+  Thread.sleep(2000);
+
+  Robot r = new Robot();
+  r.keyPress(KeyEvent.VK_ESCAPE);
+  r.keyRelease(KeyEvent.VK_ESCAPE);
+
+  File f = new File(
+   "C:\\Users\\student\\eclipse-workspace\\Practical3\\test.txt");
+
+  System.out.println(f.exists() ?
+   "Download Successful" : "Download Failed");
+
+  d.quit();
+ }
+}
+
